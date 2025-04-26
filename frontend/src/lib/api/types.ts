@@ -1,0 +1,63 @@
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    is_first_time_login: boolean;
+    import_status: 'pending' | 'completed' | string;
+    role: 'admin' | 'user' | string;
+  }
+  
+  export interface ApiError {
+    message: string;
+    error_code?: number;
+    details?: any;
+  }
+
+  export interface PointsResponse {
+    total_points: BigInteger;
+    available_for_redemtion: BigInteger;
+    zavio_token_rewarded: BigInteger;
+  };
+
+  export interface Activity {
+    id: number;
+    type: 'reward' | 'redemption' | 'bonus';
+    points: number;
+    description: string;
+    activity_timestamp: string;
+    isCredit: boolean;
+  }
+
+  // /src/lib/api/types.ts
+
+export interface RedemeResponse {
+  total_redeemed_points: number;
+  remaining_points: number;
+  transaction_id?: string;
+  timestamp?: string;
+}
+
+export interface WalletResponse {
+  wallet_address: string;
+  wallet_type: string;
+}
+
+export interface Transaction {
+  transaction_id: string
+  tokens_redeemed: number
+  transaction_status: 'success' | 'pending' | 'failed';
+  transaction_date: string;
+}
+
+// /src/lib/types.ts
+export interface NodesResponse {
+  node_id: number;
+  status: 'active' | 'reserved' | 'inactive';
+  total_nodes: number;
+  daily_reward: number;
+  date_updated: string;
+}
+
+
+
+  

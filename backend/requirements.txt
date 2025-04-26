@@ -1,0 +1,14 @@
+fastapi
+sqlalchemy
+pydantic
+email-validator
+passlib==1.7.4
+PyMySQL
+mysql-connector-python
+bcrypt==4.0.1
+PyJWT
+python-multipart
+dotenv
+uvicorn
+requests
+apscheduler

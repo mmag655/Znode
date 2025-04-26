@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: zaivio_db
+      MYSQL_USER: zaivio
+      MYSQL_PASSWORD: zaivio123
+    ports:
+      - '3307:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db_dump.sql:/docker-entrypoint-initdb.d/db_dump.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
+    container_name: backend
+    ports:
+      - '8000:8000'
+    depends_on:
+      - mysql
+    environment:
+      DB_STRING: mysql+mysqlconnector://zaivio:zaivio123@mysql:3306/zaivio_db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+    container_name: frontend
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

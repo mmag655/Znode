@@ -117,7 +117,7 @@ CREATE TABLE `user_nodes` (
   PRIMARY KEY (`user_node_id`),
   KEY `user_nodes_user_id_fkey` (`user_id`),
   CONSTRAINT `user_nodes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -126,7 +126,7 @@ CREATE TABLE `user_nodes` (
 
 LOCK TABLES `user_nodes` WRITE;
 /*!40000 ALTER TABLE `user_nodes` DISABLE KEYS */;
-INSERT INTO `user_nodes` VALUES (1,2,5,'2025-04-10 15:25:27'),(2,3,15,'2025-04-10 15:25:27'),(3,4,7,'2025-04-10 15:25:27'),(4,5,3,'2025-04-10 15:25:27'),(5,6,8,'2025-04-10 15:25:27'),(6,7,1,'2025-04-10 15:25:27'),(7,8,6,'2025-04-10 15:25:27'),(8,9,2,'2025-04-10 15:25:27'),(9,10,25,'2025-04-10 15:25:27'),(11,1,1000,'2025-04-18 16:35:06'),(12,18,100,'2025-04-27 14:33:46'),(18,29,5,'2025-04-27 16:48:05'),(19,30,10,'2025-04-27 16:48:05');
+INSERT INTO `user_nodes` VALUES (1,2,5,'2025-04-10 15:25:27'),(2,3,15,'2025-04-10 15:25:27'),(3,4,7,'2025-04-10 15:25:27'),(4,5,3,'2025-04-10 15:25:27'),(5,6,8,'2025-04-10 15:25:27'),(6,7,1,'2025-04-10 15:25:27'),(7,8,6,'2025-04-10 15:25:27'),(8,9,2,'2025-04-10 15:25:27'),(9,10,25,'2025-04-10 15:25:27'),(11,1,1000,'2025-04-18 16:35:06');
 /*!40000 ALTER TABLE `user_nodes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -201,7 +201,7 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `user_id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password_hash` text COLLATE utf8mb4_unicode_ci,
   `registration_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `last_login` datetime DEFAULT NULL,
@@ -212,9 +212,9 @@ CREATE TABLE `users` (
   `token_expiry` datetime DEFAULT NULL,
   `is_first_time_login` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`user_id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -223,7 +223,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Mike','mike@example.com','$2b$12$wbdGI2ZwLkrZAe2.wwVZdua4VgRkt4TccUuJtMW4PRaKkWVJP0iUe','2025-04-10 15:25:27',NULL,'active','admin','completed',NULL,NULL,0),(2,'Test user 1','testuser1@example.com','$2b$12$eHY9HlqeQbjfikDFaB.Nle3LTABbyyMmg.XwVcDz/wf9KnEdEqxBG','2025-04-10 15:25:27',NULL,'active','user','completed',NULL,NULL,0),(3,'Test user 2','testuser2@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(4,'Test user 3','testuser3@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(5,'Test user 4','testuser4@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(6,'Test user 5','testuser5@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(7,'Test user 6','testuser6@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(8,'Test user 7','testuser7@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(9,'Test user 8','testuser8@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(10,'Test user 9','testuser9@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(11,'Test user 10','testuser10@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(18,'Test User','test21@test.com','$2b$12$af8MdcXQhv8RRV1767r1TeaQQpvhn8BO4B/IJPSD49CbK870BqX.W','2025-04-22 13:26:26',NULL,'active','user',NULL,NULL,NULL,0),(29,'test user-1','test1@abc.com','$2b$12$dmGj12ICF2zTLAf1OUeLQOmUfrugJOc3cvRwidLAbl6HjsYGyEz5G','2025-04-27 16:48:05',NULL,'active','user',NULL,NULL,NULL,0),(30,'test user-2','test2@abc.com','$2b$12$isC7hLTr/.xvxy/BWb.zLe/EplpOc17TXwttxWgqa5aSET3v1mu7y','2025-04-27 16:48:05',NULL,'active','user',NULL,NULL,NULL,0);
+INSERT INTO `users` VALUES (1,'Mike','mike@example.com','$2b$12$wbdGI2ZwLkrZAe2.wwVZdua4VgRkt4TccUuJtMW4PRaKkWVJP0iUe','2025-04-10 15:25:27',NULL,'active','admin','completed',NULL,NULL,0),(2,'Test user 1','testuser1@example.com','$2b$12$eHY9HlqeQbjfikDFaB.Nle3LTABbyyMmg.XwVcDz/wf9KnEdEqxBG','2025-04-10 15:25:27',NULL,'active','user','completed',NULL,NULL,0),(3,'Test user 2','testuser2@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(4,'Test user 3','testuser3@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(5,'Test user 4','testuser4@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(6,'Test user 5','testuser5@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(7,'Test user 6','testuser6@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(8,'Test user 7','testuser7@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(9,'Test user 8','testuser8@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(10,'Test user 9','testuser9@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(11,'Test user 10','testuser10@example.com','$2a$12$gvGKg5cACn4zY./HMxFm5u3QTotdUNUY27t4mTGbvx2/EeWXVjG3m','2025-04-10 15:25:27',NULL,'active','user','pending',NULL,NULL,1),(18,'Test User','test1@test.com','$2b$12$af8MdcXQhv8RRV1767r1TeaQQpvhn8BO4B/IJPSD49CbK870BqX.W','2025-04-22 13:26:26',NULL,'active','user',NULL,NULL,NULL,0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -266,4 +266,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-27 16:49:57
+-- Dump completed on 2025-04-26 13:58:06

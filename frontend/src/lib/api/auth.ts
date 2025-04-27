@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { BulkUserImport } from './types';
 
 type LoginResponse = {
   access_token: string;
@@ -82,6 +83,11 @@ export const getAllUsers = async () => {
   return response.data.data;
 }
 
+export const bulkCreate = async (usersData: BulkUserImport[]) => {
+  const response = await apiClient.post('/users/bulk/create', usersData);
+  return response.data;
+};
+
 export const updateUserStatus = async (data: {
     is_first_time_login: boolean;
     import_status: string;
@@ -90,6 +96,23 @@ export const updateUserStatus = async (data: {
     const response = await apiClient.patch('/users/update', data);
     return response.data;
   };
+
+  export const updateUserProfile = async (data: {
+    user_id: number;
+    email: string;
+    nodes: number; 
+  }) => {
+    console.log("Updating user profile data:", data);
+    const response = await apiClient.patch('/users/update', data);
+    return response.data;
+  };
+
+  export const suspendUser = async (user_id: number) => {
+    console.log("Suspending user:", user_id);
+    const response = await apiClient.patch(`/users/suspend/${user_id}`);
+    return response.data;
+  };
+
 
   export const resetPassword = async (token: string, new_password: string) => {
     try {

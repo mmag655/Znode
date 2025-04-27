@@ -58,6 +58,29 @@ export interface NodesResponse {
   date_updated: string;
 }
 
+export interface BulkUserImport {
+  username: string;
+  email?: string | null;
+  assigned_nodes: number;
+  import_status?: 'pending' | 'completed' | string;
+  status?: 'active' | 'inactive' | string;
+}
+
+export interface ValidationError {
+  row: number;
+  field: string;
+  message: string;
+}
+
+export interface ImportResult {
+  success: BulkUserImport[];
+  failed: {
+    data: any;
+    error: string;
+  }[];
+}
+
+
 
 
   

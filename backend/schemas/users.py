@@ -5,7 +5,7 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     username: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     status: Optional[str] = "active"
     role: Optional[str] = "user"
     
@@ -13,6 +13,16 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class BulkUserCreate(BaseModel):
+    username: str
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    import_status: Optional[str] = "pending"
+    status: Optional[str] = "active"
+    assigned_nodes: Optional[int] = 0
+
+    class Config:
+        from_attributes = True
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

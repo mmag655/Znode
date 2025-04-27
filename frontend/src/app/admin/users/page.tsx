@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/app/components/AppLayout';
-import { getAllUsers } from '@/lib/api';
+import { getAllUsers, updateUserProfile } from '@/lib/api';
+import { bulkCreateUsers, parseUploadedFile, validateUserData } from '@/lib/utils/file_validation';
+import { toast } from 'react-toastify';
 
 interface User {
   user_id: number;
@@ -23,6 +25,9 @@ export default function AdminUsers() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage, setUsersPerPage] = useState(5);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [editedEmail, setEditedEmail] = useState('');
+  const [editedNodes, setEditedNodes] = useState(0);
 
   const router = useRouter();
   const isAdmin = true;
@@ -60,6 +65,98 @@ export default function AdminUsers() {
     return 0;
   });
 
+  const handleEditClick = (user: User) => {
+    setEditingUserId(user.user_id);
+    setEditedEmail(user.email);
+    setEditedNodes(user.assigned_nodes);
+  };
+
+  const handleSaveClick = async (userId: number) => {
+    try {
+      await updateUserProfile({
+        user_id: userId,
+        email: editedEmail,
+        nodes: editedNodes
+      });
+      
+      // Update local state
+      setUsersData(usersData.map(user => 
+        user.user_id === userId 
+          ? { ...user, email: editedEmail, assigned_nodes: editedNodes } 
+          : user
+      ));
+      
+      setEditingUserId(null);
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      setError('Failed to update user.');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // 1. Parse the uploaded file
+      const rawData = await parseUploadedFile(file);
+      
+      // 2. Validate the data structure
+      const { validData, errors: validationErrors } = validateUserData(rawData);
+      
+      if (validationErrors.length > 0) {
+        // Format validation errors for better display
+        const formattedErrors = validationErrors.map(err => 
+          `Row ${err.row}: ${err.field} error - ${err.message}`
+        );
+        setError(`Validation issues found:\n${formattedErrors.join('\n')}`);
+        return;
+      }
+      
+      // 3. Send valid data to API
+      const result = await bulkCreateUsers(validData);
+      
+      // 4. Handle results
+      if (result.failed.length > 0) {
+        const failedDetails = result.failed.map(f => 
+          `${f.data.username || 'Unknown user'}: ${f.error}`
+        ).join('\n');
+        
+        alert(`${result.failed.length} imports failed:\n${failedDetails}`);
+      }
+      
+      // 5. Refresh data on any success
+      if (result.success.length > 0) {
+        const usersList = await getAllUsers();
+        setUsersData(usersList);
+        
+        // Show toast instead of alert for better UX
+        toast.success(`Successfully imported ${result.success.length} users`, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+      
+    } catch (err) {
+      console.error('Import error:', err);
+      setError(
+        err instanceof Error ? err.message : 'An unexpected error occurred during import'
+      );
+      
+      // Show error toast
+      toast.error('Failed to complete import', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setLoading(false);
+      if (e.target) e.target.value = ''; // Reset input
+    }
+  };
+
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
@@ -75,6 +172,22 @@ export default function AdminUsers() {
             <h1 className="text-2xl font-semibold text-gray-800">User Management</h1>
             
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* Add this file input (hidden) */}
+              <input
+                type="file"
+                id="bulk-import"
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              
+              {/* Add this button */}
+              <button
+                onClick={() => document.getElementById('bulk-import')?.click()}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Bulk Import
+              </button>
               <input
                 type="text"
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
@@ -162,12 +275,30 @@ export default function AdminUsers() {
                                 </div>
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                                  <div className="text-sm text-gray-500">{user.email}</div>
+                                  {editingUserId === user.user_id ? (
+                                    <input
+                                      type="email"
+                                      className="text-sm border border-gray-300 rounded px-2 py-1"
+                                      value={editedEmail}
+                                      onChange={(e) => setEditedEmail(e.target.value)}
+                                    />
+                                  ) : (
+                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                  )}
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900">
-                              {user.assigned_nodes}
+                              {editingUserId === user.user_id ? (
+                                <input
+                                  type="number"
+                                  className="border border-gray-300 rounded px-2 py-1 w-16"
+                                  value={editedNodes}
+                                  onChange={(e) => setEditedNodes(Number(e.target.value))}
+                                />
+                              ) : (
+                                user.assigned_nodes
+                              )}
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -179,12 +310,29 @@ export default function AdminUsers() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm font-medium space-x-2">
-                              <button className="text-indigo-600 hover:text-indigo-900">
-                                Edit
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                {user.status === 'active' ? 'Suspend' : 'Activate'}
-                              </button>
+                              {editingUserId === user.user_id ? (
+                                <>
+                                  <button 
+                                    className="text-green-600 hover:text-green-900"
+                                    onClick={() => handleSaveClick(user.user_id)}
+                                  >
+                                    Save
+                                  </button>
+                                  <button 
+                                    className="text-gray-600 hover:text-gray-900"
+                                    onClick={() => setEditingUserId(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <button 
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                  onClick={() => handleEditClick(user)}
+                                >
+                                  Edit
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))

@@ -1,8 +1,11 @@
 import json
-from typing import List
+from sqlite3 import IntegrityError
+from typing import Any, Dict, List
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from services.auth_service import hash_password
+from schemas.user_nodes import UserNodesCreate, UserNodesUpdate
 from crud import users as crud_users
 from crud import user_nodes as crud_nodes
 from schemas import users as schemas_users
@@ -26,6 +29,98 @@ def create_user(user: schemas_users.UserCreate, db: Session = Depends(get_db)):
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@router.post("/bulk/create", status_code=status.HTTP_207_MULTI_STATUS ) 
+async def bulk_create_users(request: Request, db: Session = Depends(get_db)):
+    success: List[Dict] = []
+    failed: List[Dict] = []
+    
+    try:
+        users_data = await request.json()
+        print("users_data: ", users_data)
+        
+        for user_data in users_data:
+            try:
+                # Check if user exists (using existing CRUD function)
+                print("user_data: ", user_data)
+                
+                if crud_users.get_user_by_email(db, user_data["email"]):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Email already exists"
+                    )
+                # Create user (using existing CRUD function)
+                # username = user_data.get("username")
+                password = user_data.get("password", f"{user_data['username'][:3]}Xrbnh@123")
+                hashed_password = hash_password(password)
+                user_data["password"] = hashed_password
+                
+                userToCreate = schemas_users.BulkUserCreate(**user_data)
+                created_user = crud_users.create_user(db, userToCreate)
+                success.append({
+                    "email": created_user.email,
+                    "user_id": created_user.user_id,
+                    "name": f"{created_user.username}"
+                })
+                print("User created successfully: ", created_user.to_dict())
+                # Create user node if nodes are provided
+                if user_data["assigned_nodes"] > 0:
+                    node_data = UserNodesCreate(
+                        user_id=created_user.user_id,
+                        nodes_assigned=user_data["assigned_nodes"]
+                    )
+                    crud_nodes.create_user_node(db, node_data)
+                else:
+                    # Create a default node if no nodes are provided
+                    node_data = UserNodesCreate(
+                        user_id=created_user.user_id,
+                        nodes_assigned=0
+                    )
+                    crud_nodes.create_user_node(db, node_data)
+                # Commit the transaction for each user
+                
+            except HTTPException as e:
+                print("HTTPException: ", e)
+                failed.append({
+                    "username": user_data["username"],
+                    "error": e.detail,
+                    "code": e.status_code
+                })
+            except IntegrityError as e:
+                print("IntegrityError: ", e)
+                failed.append({
+                    "username": user_data["username"],
+                    "error": "Database integrity error (e.g., duplicate)",
+                    "code": status.HTTP_400_BAD_REQUEST
+                })
+            except Exception as e:
+                print("Exception: ", e)
+                failed.append({
+                    "username": user_data["username"],
+                    "error": str(e),
+                    "code": status.HTTP_500_INTERNAL_SERVER_ERROR
+                })
+        
+        
+    except Exception as e:
+        print("Error in bulk_create_users:", e)
+        db.rollback()
+        return error_response(message={
+            "status": "transaction_failed",
+            "error": str(e),
+            "code": status.HTTP_500_INTERNAL_SERVER_ERROR
+        }, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return success_response(data={
+        "success": success,
+        "failed": failed,
+        "summary": {
+            "total": len(users_data),
+            "succeeded": len(success),
+            "failed": len(failed)
+        }
+    }, message="Bulk user creation completed")
+    
 @router.get("/all")
 def read_users(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     try:
@@ -74,13 +169,49 @@ async def update_user(request: Request, user_id: int = Depends(get_current_user_
     try:
         raw = await request.json()  
         print("🔍 Raw body received:", raw)
-        user = schemas_users.UserUpdate(**raw)    
-        updated = crud_users.update_user(db, user_id, user)
+        
+        update_data = raw.copy()
+        target_user_id = raw.get("user_id", user_id)
+        
+        # Handle nodes update if present
+        if "nodes" in raw:
+            # check if admin
+            user = crud_users.get_user(db, user_id)
+            if user is None:
+                return error_response("User not found", status.HTTP_404_NOT_FOUND)
+            if not user.role == "admin":
+                return error_response("You are not authorized to update users", status.HTTP_403_FORBIDDEN)
+            
+            nodes = crud_nodes.get_user_node(db, target_user_id)
+            if nodes:
+                update_node_data = UserNodesUpdate(
+                    user_id=target_user_id,
+                    nodes_assigned=raw["nodes"]
+                )
+                crud_nodes.update_user_node(db, target_user_id, update_node_data)
+            else:
+                node_data = UserNodesCreate(
+                user_id=target_user_id,
+                nodes_assigned=raw["nodes"]  # Ensure this matches the expected type (e.g., str, list, etc.)
+                )
+                print("node_data: ", node_data)
+                crud_nodes.create_user_node(db, node_data)
+            
+            del update_data["nodes"]
+            
+        print("update_data: ", update_data)
+        # Remove user_id from update data if present
+        if "user_id" in update_data:
+            del update_data["user_id"]
+        
+        user = schemas_users.UserUpdate(**update_data)    
+        updated = crud_users.update_user(db, target_user_id, user)
         if not updated:
-            return error_response("User not found", status.HTTP_403_FORBIDDEN)
+            return error_response("User not found", status.HTTP_404_NOT_FOUND)  # Changed from 403 to 404
         return success_response(updated.to_dict(), "User updated")
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @router.delete("/id/{user_id}")

@@ -7,7 +7,6 @@ import decimal
 class UserNodesBase(BaseModel):
     user_id: int
     nodes_assigned: int
-    daily_reward: decimal.Decimal
     class Config:
         from_attributes = True
 

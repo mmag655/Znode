@@ -25,7 +25,7 @@ def get_all_user_nodes(db: Session, user_id: int) -> List['UserNodes']:
 
 def create_user_node(db: Session, node: UserNodesCreate):
     try:
-        db_node = UserNodes(**node.dict())
+        db_node = UserNodes(**node.model_dump())
         db.add(db_node)
         db.commit()
         db.refresh(db_node)
@@ -40,7 +40,7 @@ def update_user_node(db: Session, user_id: int, updates: UserNodesUpdate):
         db_node = db.query(UserNodes).filter(UserNodes.user_id == user_id).first()
         if not db_node:
             return None
-        for key, value in updates.dict(exclude_unset=True).items():
+        for key, value in updates.model_dump(exclude_unset=True).items():
             setattr(db_node, key, value)
         db.commit()
         db.refresh(db_node)

@@ -162,7 +162,24 @@ def read_user(db: Session = Depends(get_db), user_id: int = Depends(get_current_
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+@router.patch("/suspend")
+def suspend_user(userId: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    try:
+        user = crud_users.get_user(db, user_id)
+        if user is None:
+            return error_response("Admin user not found", status.HTTP_404_NOT_FOUND)
+        if not user.role == "admin":
+            return error_response("You are not authorized to suspend users", status.HTTP_403_FORBIDDEN)
+        user = schemas_users.UserUpdate(
+            user_id=userId,
+            status="inactive"
+        )
+        user = crud_users.update_user(db, userId, user)
+        if not user:
+            return error_response("User not found", status.HTTP_404_NOT_FOUND)
+        return success_response(user.to_dict(), "User retrieved")
+    except Exception as e:
+        return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @router.patch("/update")
 async def update_user(request: Request, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):

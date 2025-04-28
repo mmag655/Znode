@@ -1,330 +1,383 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/app/components/AppLayout';
-import { getAllUsers, suspendUser, updateUserProfile} from '@/lib/api';
+import { 
+  getAllNodes,
+  updateNodes,
+  createNodes,
+} from '@/lib/api/nodes';
+import { NodesResponse } from '@/lib/api/types';
 
-interface User {
-  user_id: number;
-  avatar: string;
-  username: string;
-  email: string;
-  assigned_nodes: number;
-  status: 'active' | 'inactive';
-}
-
-export default function AdminUsers() {
-  const [usersData, setUsersData] = useState<User[]>([]);
+export default function AdminNodes() {
+  const [nodes, setNodes] = useState<NodesResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<string>('username');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage, setUsersPerPage] = useState(5);
-  const [editingUserId, setEditingUserId] = useState<number | null>(null);
-  const [editedEmail, setEditedEmail] = useState('');
-  const [editedNodes, setEditedNodes] = useState(0);
-
-  const router = useRouter();
-  const isAdmin = true;
+  const [newNodeCount, setNewNodeCount] = useState<number | ''>('');
+  const [newNodeReward, setNewNodeReward] = useState<number | ''>('');
+  const [newNodeStatus, setNewNodeStatus] = useState<'active' | 'inactive' | 'reserved'>('inactive');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<Omit<NodesResponse, 'node_id'>>({ 
+    total_nodes: 0,
+    daily_reward: 0,
+    status: 'inactive',
+    date_updated: ''
+  });
 
   useEffect(() => {
-    if (!isAdmin) {
-      router.push('/');
-      return;
-    }
-
-    const fetchUsers = async () => {
+    const fetchNodes = async () => {
       try {
-        const usersList = await getAllUsers();
-        setUsersData(usersList);
-        setError(null);
+        setLoading(true);
+        const data = await getAllNodes();
+        setNodes(data);
       } catch (err) {
-        console.error('Failed to fetch users:', err);
-        setError('Failed to load user data.');
+        setError('Failed to fetch nodes');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
-  }, [isAdmin, router]);
+    fetchNodes();
+  }, []);
 
-  const filteredUsers = usersData.filter(user => 
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleAddNode = async () => {
+    if (!newNodeCount || newNodeCount <= 0) return;
+    
+    try {
+      setLoading(true);
+      const newNodeData = {
+        total_nodes: Number(newNodeCount),
+        daily_reward: Number(newNodeReward) || 0,
+        status: newNodeStatus,
+        date_updated: new Date().toISOString()
+      };
+
+      const response = await createNodes(newNodeData);
+      setNodes([...nodes, response]);
+      setNewNodeCount('');
+      setNewNodeReward('');
+    } catch (err) {
+      setError('Failed to create node');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const changeStatus = async (nodeId: number, newStatus: 'active' | 'inactive' | 'reserved') => {
+    try {
+      setLoading(true);
+      const nodeToUpdate = nodes.find(node => node.node_id === nodeId);
+      if (!nodeToUpdate) return;
+
+      const updatedNode = await updateNodes(nodeId, {
+        ...nodeToUpdate,
+        status: newStatus,
+        date_updated: new Date().toISOString()
+      });
+
+      setNodes(nodes.map(node => 
+        node.node_id === nodeId ? updatedNode : node
+      ));
+    } catch (err) {
+      setError('Failed to update node status');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEditing = (node: NodesResponse) => {
+    setEditingId(node.node_id);
+    setEditValues({
+      total_nodes: node.total_nodes,
+      daily_reward: node.daily_reward || 0,
+      status: node.status,
+      date_updated: node.date_updated
+    });
+  };
+
+  const saveEditing = async (nodeId: number) => {
+    try {
+      setLoading(true);
+      const updatedNode = await updateNodes(nodeId, {
+        ...editValues,
+        date_updated: new Date().toISOString()
+      });
+
+      setNodes(nodes.map(node => 
+        node.node_id === nodeId ? updatedNode : node
+      ));
+      setEditingId(null);
+    } catch (err) {
+      setError('Failed to update node');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+  };
+
+  const totalNodesCount = nodes.reduce((sum, node) => sum + node.total_nodes, 0);
+  const totalActive = nodes.filter(node => node.status === 'active').length;
+  const totalReserved = nodes.filter(node => node.status === 'reserved').length;
+  const totalRewards = nodes.reduce(
+    (sum, node) => sum + (node.status === 'active' ? (node.daily_reward || 0) : 0), 
+    0
   );
 
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (a[sortField as keyof User] < b[sortField as keyof User]) return sortOrder === 'asc' ? -1 : 1;
-    if (a[sortField as keyof User] > b[sortField as keyof User]) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
+  if (loading && nodes.length === 0) {
+    return (
+      <AppLayout>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-center items-center h-64">
+            <p>Loading nodes...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
-  const handleEditClick = (user: User) => {
-    setEditingUserId(user.user_id);
-    setEditedEmail(user.email);
-    setEditedNodes(user.assigned_nodes);
-  };
-
-  const handleSaveClick = async (userId: number) => {
-    try {
-      await updateUserProfile({
-        user_id: userId,
-        email: editedEmail,
-        nodes: editedNodes
-      });
-      
-      // Update local state
-      setUsersData(usersData.map(user => 
-        user.user_id === userId 
-          ? { ...user, email: editedEmail, assigned_nodes: editedNodes } 
-          : user
-      ));
-      
-      setEditingUserId(null);
-    } catch (error) {
-      console.error('Failed to update user:', error);
-      setError('Failed to update user.');
-    }
-  };
-
-  const userSuspend = async (userId: number) => {
-    try {
-      // Call the API function, not itself
-      const updatedUser: User = await suspendUser(userId);
-  
-      // Get new status from updated user
-      const newStatus = updatedUser.status === 'active' ? 'inactive' : 'active';
-  
-      // Update local state
-      setUsersData(prevUsersData => 
-        prevUsersData.map(user => 
-          user.user_id === userId 
-            ? { ...user, status: newStatus } 
-            : user
-        )
-      );
-    } catch (error) {
-      console.error('Failed to update user status:', error);
-      setError('Failed to update user status.');
-    }
-  };
-  
-
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h1 className="text-2xl font-semibold text-gray-800">User Management</h1>
-            
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <input
-                type="text"
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-              <select
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                value={usersPerPage}
-                onChange={(e) => {
-                  setUsersPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-              >
-                {[5, 10, 15, 20].map(num => (
-                  <option key={num} value={num}>{num} per page</option>
-                ))}
-              </select>
+            <h1 className="text-2xl font-semibold text-gray-900">Nodes Management</h1>
+            <div className="flex flex-wrap gap-2 text-sm">
+              <div className="bg-gray-50 px-3 py-2 rounded">
+                <span className="font-medium">Total Nodes: </span>
+                <span className="font-mono">{totalNodesCount.toLocaleString()}</span>
+              </div>
+              <div className="bg-green-50 px-3 py-2 rounded">
+                <span className="font-medium">Active: </span>
+                <span className="font-mono">{totalActive}</span>
+              </div>
+              <div className="bg-yellow-50 px-3 py-2 rounded">
+                <span className="font-medium">Reserved: </span>
+                <span className="font-mono">{totalReserved}</span>
+              </div>
+              <div className="bg-blue-50 px-3 py-2 rounded">
+                <span className="font-medium">Total Rewards: </span>
+                <span className="font-mono">{totalRewards}</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {loading ? (
-              <div className="p-8 text-center text-gray-500">Loading users...</div>
-            ) : error ? (
-              <div className="p-8 text-center text-red-500">{error}</div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => {
-                            setSortField('username');
-                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                          }}
-                        >
-                          <div className="flex items-center">
-                            User
-                            {sortField === 'username' && (
-                              <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                            )}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => {
-                            setSortField('assigned_nodes');
-                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                          }}
-                        >
-                          <div className="flex items-center">
-                            Nodes
-                            {sortField === 'assigned_nodes' && (
-                              <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                            )}
-                          </div>
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {currentUsers.length > 0 ? (
-                        currentUsers.map((user) => (
-                          <tr key={user.user_id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10">
-                                  <img
-                                    className="h-10 w-10 rounded-full"
-                                    src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=6366f1&color=fff`}
-                                    alt={user.username}
-                                  />
-                                </div>
-                                <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                                  {editingUserId === user.user_id ? (
-                                    <input
-                                      type="email"
-                                      className="text-sm border border-gray-300 rounded px-2 py-1"
-                                      value={editedEmail}
-                                      onChange={(e) => setEditedEmail(e.target.value)}
-                                    />
-                                  ) : (
-                                    <div className="text-sm text-gray-500">{user.email}</div>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-900">
-                              {editingUserId === user.user_id ? (
-                                <input
-                                  type="number"
-                                  className="border border-gray-300 rounded px-2 py-1 w-16"
-                                  value={editedNodes}
-                                  onChange={(e) => setEditedNodes(Number(e.target.value))}
-                                />
-                              ) : (
-                                user.assigned_nodes
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                user.status === 'active'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm font-medium space-x-2">
-                              {editingUserId === user.user_id ? (
-                                <>
-                                  <button 
-                                    className="text-green-600 hover:text-green-900"
-                                    onClick={() => handleSaveClick(user.user_id)}
-                                  >
-                                    Save
-                                  </button>
-                                  <button 
-                                    className="text-gray-600 hover:text-gray-900"
-                                    onClick={() => setEditingUserId(null)}
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button 
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                    onClick={() => handleEditClick(user)}
-                                  >
-                                    Edit
-                                  </button>
-                                  <button 
-                                    className={user.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
-                                    onClick={() => userSuspend(user.user_id)}
-                                  >
-                                    {user.status === 'active' ? 'Suspend' : 'Activate'}
-                                  </button>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                            No users found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <h2 className="text-lg font-medium mb-3 text-gray-800">Add New Node</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nodes Count</label>
+                <input
+                  type="number"
+                  min="1"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newNodeCount}
+                  onChange={(e) => setNewNodeCount(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="10000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Daily Reward</label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newNodeReward}
+                  onChange={(e) => setNewNodeReward(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newNodeStatus}
+                  onChange={(e) => setNewNodeStatus(e.target.value as 'active' | 'inactive' | 'reserved')}
+                >
+                  <option value="inactive">Inactive</option>
+                  <option value="active">Active</option>
+                  <option value="reserved">Reserved</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleAddNode}
+                  disabled={!newNodeCount || loading}
+                  className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {loading ? 'Adding...' : 'Add Node'}
+                </button>
+              </div>
+            </div>
+          </div>
 
-                {totalPages > 1 && (
-                  <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                    <div className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{indexOfFirstUser + 1}</span> to{' '}
-                      <span className="font-medium">
-                        {Math.min(indexOfLastUser, sortedUsers.length)}
-                      </span>{' '}
-                      of <span className="font-medium">{sortedUsers.length}</span> users
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => paginate(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className={`px-3 py-1 rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={() => paginate(currentPage + 1)}
-                        disabled={currentPage >= totalPages}
-                        className={`px-3 py-1 rounded-md ${currentPage >= totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nodes</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Daily Reward</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Updated</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {nodes.map((node) => (
+                  <tr key={node.node_id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {node.node_id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {editingId === node.node_id ? (
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          value={editValues.total_nodes}
+                          onChange={(e) => setEditValues({
+                            ...editValues,
+                            total_nodes: Number(e.target.value)
+                          })}
+                        />
+                      ) : (
+                        node.total_nodes.toLocaleString()
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {editingId === node.node_id ? (
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          value={editValues.daily_reward || 0}
+                          onChange={(e) => setEditValues({
+                            ...editValues,
+                            daily_reward: Number(e.target.value)
+                          })}
+                        />
+                      ) : (
+                        node.daily_reward || 0
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editingId === node.node_id ? (
+                        <select
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                          value={editValues.status}
+                          onChange={(e) => setEditValues({
+                            ...editValues,
+                            status: e.target.value as 'active' | 'inactive' | 'reserved'
+                          })}
+                        >
+                          <option value="inactive">Inactive</option>
+                          <option value="active">Active</option>
+                          <option value="reserved">Reserved</option>
+                        </select>
+                      ) : (
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          node.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : node.status === 'reserved'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {node.status.charAt(0).toUpperCase() + node.status.slice(1)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {node.date_updated ? new Date(node.date_updated).toLocaleString() : 'Never'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      {editingId === node.node_id ? (
+                        <>
+                          <button 
+                            onClick={() => saveEditing(node.node_id)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            disabled={loading}
+                          >
+                            {loading ? 'Saving...' : 'Save'}
+                          </button>
+                          <button 
+                            onClick={cancelEditing}
+                            className="text-gray-600 hover:text-gray-900"
+                            disabled={loading}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => startEditing(node)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            disabled={loading}
+                          >
+                            Edit
+                          </button>
+                          {node.status !== 'active' && (
+                            <button
+                              onClick={() => changeStatus(node.node_id, 'active')}
+                              className="text-green-600 hover:text-green-900"
+                              disabled={loading}
+                            >
+                              Activate
+                            </button>
+                          )}
+                          {node.status !== 'reserved' && (
+                            <button
+                              onClick={() => changeStatus(node.node_id, 'reserved')}
+                              className="text-yellow-600 hover:text-yellow-900"
+                              disabled={loading}
+                            >
+                              Reserve
+                            </button>
+                          )}
+                          {node.status !== 'inactive' && (
+                            <button
+                              onClick={() => changeStatus(node.node_id, 'inactive')}
+                              className="text-gray-600 hover:text-gray-900"
+                              disabled={loading}
+                            >
+                              Deactivate
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

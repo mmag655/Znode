@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import apiClient from './client';
 import { BulkUserImport } from './types';
 
@@ -13,7 +14,7 @@ type UserData = {
 };
 
 // Token management
-export const setAuthTokens = (accessToken: string, refreshToken: string) => {
+export const setAuthTokens = (accessToken: string) => {
   if (typeof window !== 'undefined') {
     console.log("saving token to loacl storage", accessToken)
     localStorage.setItem('access_token', accessToken);
@@ -44,7 +45,7 @@ export const login = async (credentials: UserData): Promise<LoginResponse> => {
     
     console.log("access token : ", access_token);
   
-    setAuthTokens(access_token, ''); // Must be before any navigation or reload
+    setAuthTokens(access_token); // Must be before any navigation or reload
     return response.data;
 };
   
@@ -58,8 +59,18 @@ export const signup = async (userData: UserData) => {
     }
     console.log("response.data.data : ", response.data.data)
     return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Signup error');
+    
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      console.error('Error response:', error.response);
+      throw new Error(error.response?.data?.message || 'Signup error');
+    } else if (error instanceof Error) {
+      console.error('Error:', error.message);
+      throw new Error(error.message || 'Signup error');
+    } else {
+      console.error('Unknown error:', error);
+      throw new Error('Signup error');
+    }
   }
 };
 
@@ -121,9 +132,17 @@ export const updateUserStatus = async (data: {
         "new_password": new_password,
       });
       return response.data;
-    } catch (error: any) {
-      const message = error?.response?.data?.message || 'Failed to reset password';
-      throw new Error(message);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Error response:', error.response);
+        throw new Error(error.response?.data?.message || 'Signup error');
+      } else if (error instanceof Error) {
+        console.error('Error:', error.message);
+        throw new Error(error.message || 'Signup error');
+      } else {
+        console.error('Unknown error:', error);
+        throw new Error('Signup error');
+      }
     }
   };
 
@@ -131,8 +150,16 @@ export const updateUserStatus = async (data: {
     try {
       const response = await apiClient.post('/auth/forgot-password', {"email": email});
       return response.data;
-    } catch (error: any) {
-      const message = error?.response?.data?.message || 'Failed to reset password';
-      throw new Error(message);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Error response:', error.response);
+        throw new Error(error.response?.data?.message || 'Signup error');
+      } else if (error instanceof Error) {
+        console.error('Error:', error.message);
+        throw new Error(error.message || 'Signup error');
+      } else {
+        console.error('Unknown error:', error);
+        throw new Error('Signup error');
+      }
     }
   };

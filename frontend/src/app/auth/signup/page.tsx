@@ -43,7 +43,7 @@ export default function SignupPage() {
         setError(data.message || 'Signup failed');
       }
     } catch (err) {
-      setError('An error occurred during signup');
+      setError(`An error occurred during signup: ${err}`);
     }
   };
 

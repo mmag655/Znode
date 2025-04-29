@@ -18,7 +18,7 @@ export default function Transactions() {
         const data = await fetchTransactions();
         setTransactions(data);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Failed to fetch transactions:', err);
         setError('Failed to load transactions.');
       } finally {

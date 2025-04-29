@@ -7,10 +7,11 @@ interface IconProps {
 }
 
 export function DashboardIcon({ active, className }: IconProps): ReactNode {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`h-6 w-6 ${className}`}
+      className={`h-6 w-6 ${colorClass} ${className}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -26,10 +27,11 @@ export function DashboardIcon({ active, className }: IconProps): ReactNode {
 }
 
 export function RewardsIcon({ active, className }: IconProps): ReactNode {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`h-6 w-6 ${className}`}
+      className={`h-6 w-6 ${colorClass} ${className}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -45,10 +47,11 @@ export function RewardsIcon({ active, className }: IconProps): ReactNode {
 }
 
 export function WalletIcon({ active, className }: IconProps): ReactNode {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`h-6 w-6 ${className}`}
+      className={`h-6 w-6 ${colorClass} ${className}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -64,10 +67,11 @@ export function WalletIcon({ active, className }: IconProps): ReactNode {
 }
 
 export function TransactionIcon({ active, className }: IconProps): ReactNode {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`h-6 w-6 ${className}`}
+      className={`h-6 w-6 ${colorClass} ${className}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -83,10 +87,11 @@ export function TransactionIcon({ active, className }: IconProps): ReactNode {
 }
 
 export function SearchIcon({ active, className }: IconProps): ReactNode {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className={`h-6 w-6 ${className}`}
+        className={`h-6 w-6 ${colorClass} ${className}`}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -102,10 +107,11 @@ export function SearchIcon({ active, className }: IconProps): ReactNode {
   }
 
   export function AdminIcon({ active, className }: IconProps): ReactNode {
+    const colorClass = active ? 'text-blue-600' : 'text-gray-500';
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className={`h-6 w-6 ${className}`}
+        className={`h-6 w-6 ${colorClass} ${className}`}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -121,17 +127,18 @@ export function SearchIcon({ active, className }: IconProps): ReactNode {
   }
 
   // Example icons - adjust to match your design system
-export function UsersIcon({ active, className }: { active?: boolean; className?: string }) {
+export function UsersIcon({ active, className = '' }: { active?: boolean; className?: string }) {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className={`${colorClass} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     </svg>
   );
-}
-
-export function NodesIcon({ active, className }: { active?: boolean; className?: string }) {
+} 
+export function NodesIcon({ active, className = '' }: { active?: boolean; className?: string }) {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg className={`${colorClass} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
     </svg>
   );

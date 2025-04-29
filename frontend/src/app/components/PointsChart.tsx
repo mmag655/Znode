@@ -9,6 +9,8 @@ import {
   Title,
   Tooltip,
   Legend,
+  TooltipItem,
+  ChartOptions,
 } from 'chart.js';
 
 ChartJS.register(
@@ -22,34 +24,36 @@ ChartJS.register(
 );
 
 export default function PointsChart() {
-  const options = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'top',
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
-            return `${context.dataset.label}: ${context.parsed.y} points`;
-          }
-        }
-      }
+          label: function (tooltipItem: TooltipItem<'line'>) {
+            const label = tooltipItem.dataset.label || '';
+            const value = tooltipItem.parsed.y;
+            return `${label}: ${value} points`;
+          },
+        },
+      },
     },
     scales: {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value: any) {
-            return value;
-          }
-        }
-      }
-    }
+          callback: function (tickValue: string | number) {
+            return typeof tickValue === 'number' ? tickValue : parseFloat(tickValue);
+          },
+        },
+      },
+    },
   };
 
   const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-  
+
   const data = {
     labels,
     datasets: [

@@ -10,7 +10,7 @@ export interface User {
   export interface ApiError {
     message: string;
     error_code?: number;
-    details?: any;
+    details?: string;
   }
 
   export interface PointsResponse {
@@ -75,7 +75,7 @@ export interface ValidationError {
 export interface ImportResult {
   success: BulkUserImport[];
   failed: {
-    data: any;
+    data: BulkUserImport;
     error: string;
   }[];
 }

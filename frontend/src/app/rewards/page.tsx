@@ -32,7 +32,7 @@ export default function Rewards() {
 
         setRewardsData(formattedRewards);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Failed to fetch rewards:', err);
         setError('Failed to load rewards.');
       } finally {

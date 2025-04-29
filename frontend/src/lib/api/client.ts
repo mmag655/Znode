@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosHeaders, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { getAccessToken, setAuthTokens, clearAuthTokens } from './auth';
 import { toast } from 'react-toastify';
 
@@ -33,16 +33,17 @@ function addSubscriber(cb: (token: string) => void) {
   refreshSubscribers.push(cb);
 }
 
-function setAuthHeader(headers: any, token: string) {
+// Modify this function to properly handle `AxiosHeaders` with the `.set()` method
+function setAuthHeader(headers: AxiosHeaders, token: string) {
   if (headers) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);  // Correct way to set headers in Axios
   }
 }
 
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
-  if (token) {
-    setAuthHeader(config.headers, token);
+  if (token && config.headers) {
+    setAuthHeader(config.headers as AxiosHeaders, token);
   }
   return config;
 });
@@ -62,7 +63,7 @@ apiClient.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve) => {
           addSubscriber((token: string) => {
-            setAuthHeader(originalRequest.headers, token);
+            setAuthHeader(originalRequest.headers as AxiosHeaders, token);
             resolve(apiClient(originalRequest));
           });
         });
@@ -75,9 +76,9 @@ apiClient.interceptors.response.use(
         });
 
         const access_token = response.data.data.access_token;
-        setAuthTokens(access_token, '');
+        setAuthTokens(access_token);
         onRefreshed(access_token);
-        setAuthHeader(originalRequest.headers, access_token);
+        setAuthHeader(originalRequest.headers as AxiosHeaders, access_token);
 
         return apiClient(originalRequest);
       } catch (refreshError) {

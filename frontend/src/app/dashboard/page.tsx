@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import DashboardCard, { PointsIcon, TokenIcon, WalletIcon } from '../components/DashboardCard';
-import PointsChart from '../components/PointsChart';
 import RecentActivity from '../components/RecentActivity';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
-import { getPoints, redeemPoints } from '@/lib/api/points';
+import { getPoints } from '@/lib/api/points';
 import { PointsResponse } from '@/lib/api/types';
 import { toast } from 'react-toastify';
 
 export default function Dashboard() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   const [pointsData, setPointsData] = useState<PointsResponse | null>(null);
@@ -24,6 +23,7 @@ export default function Dashboard() {
         router.push('/wallet');
       }
     } catch (error) {
+      console.error('Error redeeming points:', error);
       toast.error('Failed to redeem points.');
     }
   };
@@ -49,7 +49,7 @@ export default function Dashboard() {
           setPointsError(null); // clear any old error
         }
       }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching points:', err);
         // setPointsError('Failed to load points. Please try again later.');
       }

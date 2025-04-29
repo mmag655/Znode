@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         //   }
         // }
       } catch (err) {
-        console.log("Error fetching user. Clearing tokens.");
+        console.log("Error fetching user. Clearing tokens.", err);
         clearAuthTokens();
       } finally {
         setLoading(false);
@@ -115,12 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Check if first time login and import status is pending
       if (user.is_first_time_login && user.import_status === 'pending') {
-        router.push('/auth/reset-password?is_first_time_login=true');
+        router.push('/auth/reset-password');
       } else {
         router.push('/');
       }
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err) {
+      setError('Login failed');
       throw err;
     } finally {
       setLoading(false);
@@ -133,8 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signup({ email, password, username });
       await handleLogin(email, password);
-    } catch (err: any) {
-      setError(err.message || 'Signup failed');
+    } catch (err) {
+      setError('Signup failed');
       throw err;
     } finally {
       setLoading(false);

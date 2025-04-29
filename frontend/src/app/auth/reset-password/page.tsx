@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
@@ -13,9 +13,8 @@ export default function ResetPasswordPage() {
   const [step, setStep] = useState<'email' | 'password'>('email');
   const { user, forgotPassword, resetPassword, completeFirstTimeLogin } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const isFirstTime = searchParams.get('is_first_time_login') === 'true';
+  const isFirstTime = user?.is_first_time_login && user?.import_status === 'pending';
 
   useEffect(() => {
     if (isFirstTime && user?.email) {
@@ -39,8 +38,8 @@ export default function ResetPasswordPage() {
       const reset_token = await forgotPassword(email);
       console.log("Reset token received:", reset_token);
       setStep('password');
-    } catch (err: any) {
-      setError(err.message || 'Failed to verify email');
+    } catch (err) {
+      setError(`Failed to verify email${err}`);
     } finally {
       setLoading(false);
     }
@@ -72,8 +71,8 @@ export default function ResetPasswordPage() {
       }
       
       router.push('/');
-    } catch (err: any) {
-      setError(err.message || 'Password reset failed');
+    } catch (err) {
+      setError(`Password reset failed${err}`);
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,7 @@ import { bulkCreate } from '../api';
 /**
  * Parses uploaded Excel/CSV file into JSON data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const parseUploadedFile = async (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -38,7 +39,7 @@ export const parseUploadedFile = async (file: File): Promise<any[]> => {
 
 
 // Validates user import data with strict typing
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const validateUserData = (data: any[]): {
     validData: BulkUserImport[];
     errors: ValidationError[];

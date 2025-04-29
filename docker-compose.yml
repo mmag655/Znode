@@ -27,6 +27,9 @@ services:
       - mysql
     environment:
       DB_STRING: mysql+mysqlconnector://zaivio:zaivio123@mysql:3306/zaivio_db
+      WALLET_PRIVATE_KEY: your_private_key_here
+      WALLET_ADDRESS: your_wallet_address_here
+      POLYGON_RPC_URL: your_polygon_rpc_url_here
 
   frontend:
     build:

@@ -12,3 +12,4 @@ dotenv
 uvicorn
 requests
 apscheduler
+web3

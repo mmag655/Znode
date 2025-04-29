@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: zaivio-nodes-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: zaivio_db
+      MYSQL_USER: zaivio
+      MYSQL_PASSWORD: zaivio123
+    # ports:
+    #   - '3307:3306'
+    volumes:
+      - /root/docker-volumes/mysql-nodes:/var/lib/mysql
+      - ./db_dump.sql:/docker-entrypoint-initdb.d/db_dump.sql
+    networks:
+      - nginx-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
+    container_name: zaivio-nodes-backend
+    # ports:
+    #   - '8000:8000'
+    depends_on:
+      - mysql
+    environment:
+      DB_STRING: mysql+mysqlconnector://zaivio:zaivio123@mysql:3306/zaivio_db
+    networks:
+      - nginx-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+    container_name: zaivio-nodes-frontend
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=https://nodesapi.zaiv.io
+    # ports:
+    #   - '3000:3000'
+    depends_on:
+      - backend
+    networks:
+      - nginx-network
+
+networks:
+  nginx-network:
+    external: true

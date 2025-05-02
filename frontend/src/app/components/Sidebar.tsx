@@ -9,7 +9,8 @@ import {
   TransactionIcon, 
   AdminIcon,
   UsersIcon,
-  NodesIcon
+  NodesIcon, 
+  ContactIcon
 } from './icons';
 import { useState } from 'react';
 import clsx from 'clsx';
@@ -36,6 +37,7 @@ export default function Sidebar() {
         { name: 'Nodes', href: '/admin/nodes', icon: NodesIcon }
       ]
     }] : []),
+    { name: 'Contact', href: 'http://Zaivio.com', icon: ContactIcon, external: true }, // New link
   ];
   
   return (
@@ -47,6 +49,31 @@ export default function Sidebar() {
               const isActive = pathname === item.href || 
                 (item.subItems && item.subItems.some(subItem => pathname === subItem.href));
               
+              if (item.external) {
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={clsx(
+                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
+                      'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    )}
+                  >
+                    {item.icon && (
+                      <item.icon 
+                        className={clsx(
+                          'mr-3 flex-shrink-0 h-6 w-6',
+                          'text-gray-400 group-hover:text-gray-500'
+                        )}
+                      />
+                    )}
+                    {item.name}
+                  </a>
+                );
+              }
+
               if (item.subItems) {
                 return (
                   <div key={item.name}>
@@ -58,13 +85,15 @@ export default function Sidebar() {
                       )}
                     >
                       <div className="flex items-center">
-                        <item.icon 
-                          active={isActive} 
-                          className={clsx(
-                            'mr-3 flex-shrink-0 h-6 w-6',
-                            isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
-                          )}
-                        />
+                        {item.icon && (
+                          <item.icon 
+                            active={isActive} 
+                            className={clsx(
+                              'mr-3 flex-shrink-0 h-6 w-6',
+                              isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
+                            )}
+                          />
+                        )}
                         {item.name}
                       </div>
                       <svg
@@ -92,15 +121,17 @@ export default function Sidebar() {
                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             )}
                           >
-                            <subItem.icon 
-                              active={pathname === subItem.href} 
-                              className={clsx(
-                                'mr-3 flex-shrink-0 h-5 w-5',
-                                pathname === subItem.href
-                                  ? 'text-indigo-500'
-                                  : 'text-gray-400 group-hover:text-gray-500'
-                              )}
-                            />
+                            {subItem.icon && (
+                              <subItem.icon 
+                                active={pathname === subItem.href} 
+                                className={clsx(
+                                  'mr-3 flex-shrink-0 h-5 w-5',
+                                  pathname === subItem.href
+                                    ? 'text-indigo-500'
+                                    : 'text-gray-400 group-hover:text-gray-500'
+                                )}
+                              />
+                            )}
                             {subItem.name}
                           </Link>
                         ))}
@@ -118,13 +149,15 @@ export default function Sidebar() {
                       isActive ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >
-                    <item.icon 
-                      active={isActive} 
-                      className={clsx(
-                        'mr-3 flex-shrink-0 h-6 w-6',
-                        isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
-                      )}
-                    />
+                    {item.icon && (
+                      <item.icon 
+                        active={isActive} 
+                        className={clsx(
+                          'mr-3 flex-shrink-0 h-6 w-6',
+                          isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
+                        )}
+                      />
+                    )}
                     {item.name}
                   </Link>
                 );

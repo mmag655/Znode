@@ -8,9 +8,9 @@ export const getPoints = async (): Promise<PointsResponse> => {
     return response.data.data;
 };
 
-export async function redeemPoints(): Promise<RedemeResponse> {
+export async function redeemPointsApi(pointsToRedeeme: number): Promise<RedemeResponse> {
 
-    const response = await apiClient.get('/points/redeeme');    
+    const response = await apiClient.post(`/points/redeem/${pointsToRedeeme}`);    
     return response.data.data;
 
 }

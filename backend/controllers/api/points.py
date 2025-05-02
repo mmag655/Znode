@@ -66,7 +66,7 @@ def delete_points(user_points_id: int, db: Session = Depends(get_db)):
 @router.post("/redeem/{points_to_redeem}")
 def redeem_points(points_to_redeem: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     try:
-        result = points.redeem_user_points(db=db, user_id=user_id, points=points_to_redeem)
+        result = points.redeem_user_points(points_to_redeem=points_to_redeem, db=db, user_id=user_id)
         if not result:
             return error_response("Insufficient points or user not found", status.HTTP_400_BAD_REQUEST)
         return success_response(result, "Points redeemed successfully")

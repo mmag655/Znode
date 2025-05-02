@@ -2,7 +2,7 @@ from sqlalchemy import Transaction
 from sqlalchemy.orm import Session
 from utils.redeeme_tokens import send_tokens_to_wallet
 from crud.wallet import get_wallet
-from models.models import UserPoints
+from models.models import Transactions, UserPoints
 from schemas.points import UserPointsCreate, UserPointsUpdate
 from fastapi import HTTPException, status
 
@@ -66,9 +66,8 @@ def delete_user_points(db: Session, user_points_id: int):
 
 def redeem_user_points(points_to_redeem: int, user_id: int, db: Session):
     try:
-        # Begin a transaction
-        with db.begin():  # This ensures all changes are part of the same transaction
-
+        # Use transaction context manager
+        with db.begin():
             # Fetch user points
             user_points = db.query(UserPoints).filter(UserPoints.user_id == user_id).first()
             if not user_points:
@@ -76,47 +75,45 @@ def redeem_user_points(points_to_redeem: int, user_id: int, db: Session):
 
             available_points = user_points.available_for_redemtion
             
-            # Check if the user has enough points
             if available_points < points_to_redeem:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough points to redeem")
 
-            # Calculate tokens (assuming 1 point = 1 token)
-            factor = 1  # 1 point = 1 token
+            # Calculate tokens
+            factor = 1
             tokens_sent = points_to_redeem * factor
 
-            # Update user points for redemption
+            # Update user points
             user_points.available_for_redemtion -= points_to_redeem
-            db.commit()  # This commits the changes to user points
+            user_points.zavio_token_rewarded = (user_points.zavio_token_rewarded or 0) + points_to_redeem
 
-            # Dummy function to send tokens to wallet
-            wallet_address = get_wallet(user_id, db)  # Get the user's wallet address
+            # Get wallet address
+            wallet = get_wallet(user_id, db)
 
-            # Call dummy function to send tokens to wallet
-            transaction_successful = send_tokens_to_wallet(wallet_address, tokens_sent)
-            
+            # Send tokens
+            transaction_successful = send_tokens_to_wallet(wallet.wallet_address, tokens_sent)
             if not transaction_successful:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send tokens to wallet")
 
-            # Record the transaction
-            transaction = Transaction(
+            # Record transaction
+            transaction = Transactions(
                 user_id=user_id,
+                wallet_address=wallet.wallet_address,
                 tokens_redeemed=points_to_redeem,
-                transaction_type="redeem",
-                transaction_status="completed"
+                transaction_status="success"
             )
-            db.add(transaction)  # Add transaction record to session
-
-            # Commit the transaction to save all changes
-            db.commit()  # All changes (points, transaction) are committed to the database
-            db.refresh(transaction)
+            db.add(transaction)
             
-            return {
-                "total_redeemed_points": points_to_redeem,
-                "remaining_points": user_points.available_for_redemtion,
-                "transaction_id": transaction.transaction_id,
-                "timestamp": transaction.blockchain_timestamp
-            }
+
+        # Outside the `with` block: safe to refresh (session is still valid)
+        db.refresh(transaction)
+
+        return {
+            "total_redeemed_points": points_to_redeem,
+            "remaining_points": user_points.available_for_redemtion,
+            "transaction_id": transaction.transaction_id,
+            "timestamp": transaction.blockchain_timestamp
+        }
 
     except Exception as e:
-        db.rollback()  # Rollback the entire transaction if any error occurs
+        db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

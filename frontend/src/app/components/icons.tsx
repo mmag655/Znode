@@ -143,3 +143,12 @@ export function NodesIcon({ active, className = '' }: { active?: boolean; classN
     </svg>
   );
 }
+
+export function ContactIcon({ active, className = '' }: { active?: boolean; className?: string }) {
+  const colorClass = active ? 'text-blue-600' : 'text-gray-500';
+  return (
+    <svg className={`${colorClass} ${className}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4m8 0a4 4 0 01-8 0m8 0h.01M12 15h.01M12 19h.01" />
+    </svg>
+  );
+}

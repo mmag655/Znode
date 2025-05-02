@@ -28,6 +28,10 @@ export default function AdminUsers() {
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [editedEmail, setEditedEmail] = useState('');
   const [editedNodes, setEditedNodes] = useState(0);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserNodes, setNewUserNodes] = useState(0);
+  const [newUserEmail, setNewUserEmail] = useState('');
 
   const router = useRouter();
   const isAdmin = true;
@@ -157,6 +161,56 @@ export default function AdminUsers() {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!newUserName || newUserNodes <= 0) {
+      toast.error('Username and nodes are required.', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const newUser = {
+        username: newUserName,
+        email: newUserEmail || undefined,
+        assigned_nodes: newUserNodes,
+        status: 'active',
+      };
+
+      const result = await bulkCreateUsers([newUser]);
+
+      if (result.success.length > 0) {
+        const usersList = await getAllUsers();
+        setUsersData(usersList);
+        toast.success('User added successfully!', {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+
+      if (result.failed.length > 0) {
+        toast.error(`Failed to add user: ${result.failed[0].error}`, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+
+      setIsAddUserModalOpen(false);
+      setNewUserName('');
+      setNewUserNodes(0);
+      setNewUserEmail('');
+    } catch (err) {
+      console.error('Failed to add user:', err);
+      setError('Failed to add user.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
@@ -188,6 +242,12 @@ export default function AdminUsers() {
               >
                 Bulk Import
               </button>
+              <button
+                onClick={() => setIsAddUserModalOpen(true)}
+                className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Add User
+              </button>
               <input
                 type="text"
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
@@ -212,6 +272,58 @@ export default function AdminUsers() {
               </select>
             </div>
           </div>
+
+          {/* Add User Modal */}
+          {isAddUserModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Add New User</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Username</label>
+                    <input
+                      type="text"
+                      className="mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                      value={newUserName}
+                      onChange={(e) => setNewUserName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nodes</label>
+                    <input
+                      type="number"
+                      className="mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                      value={newUserNodes}
+                      onChange={(e) => setNewUserNodes(Number(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      className="mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setIsAddUserModalOpen(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddUser}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    Add User
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
             {loading ? (

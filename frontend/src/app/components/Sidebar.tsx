@@ -44,14 +44,6 @@ export default function Sidebar() {
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64 border-r border-gray-200 bg-white">
-        {/* Logo Section */}
-        <div className="flex items-center justify-center py-4">
-          <img 
-            src="/logo.jpeg" 
-            alt="Zaivio Logo" 
-            className="h-12 w-auto"
-          />
-        </div>
         <div className="h-0 flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
           <nav className="flex-1 px-2 space-y-1">
             {navItems.map((item) => {

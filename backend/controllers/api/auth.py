@@ -55,8 +55,8 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
                 error_code=status.HTTP_401_UNAUTHORIZED
             )
         
-        access_token = create_access_token({"user_id": user.user_id})
-        refresh_token = create_refresh_token({"user_id": user.user_id})
+        access_token = create_access_token({"user_id": user.user_id, "email": user.email})
+        refresh_token = create_refresh_token({"user_id": user.user_id, "email": user.email})
         
         # Set refresh token as HttpOnly cookie
         response = success_response(

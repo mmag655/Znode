@@ -1,5 +1,4 @@
 // components/Header.tsx
-import Link from 'next/link';
 import UserDropdown from './UserDropdown';
 
 export default function Header() {

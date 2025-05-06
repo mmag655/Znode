@@ -3,7 +3,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
 from utils.redeeme_tokens import send_tokens_to_wallet
 from crud.wallet import get_wallet
-from models.models import Transactions, UserPoints
+from models.models import Transactions, UserPoints, Users
 from schemas.points import UserPointsCreate, UserPointsUpdate
 from fastapi import HTTPException, status
 
@@ -26,23 +26,36 @@ def get_all_user_points(db: Session, user_id: int):
 
 def get_all_points(db: Session):
     try:
-        user_points = (
-            db.query(UserPoints)
-            .options(joinedload(UserPoints.user))  # Load user relationship
-            .all()
-        )
-        return [
-            {
-                "id": point.user_points_id,
-                "total_points": point.total_points,
-                "user_id": point.user_id,
-                "user_name": point.user.username,
-                "user_email": point.user.email
-            }
-            for point in user_points
-        ]
+        active_users = db.query(Users).filter(Users.status == "active").all()
+        result = []
+
+        for user in active_users:
+            user_point = (
+                db.query(UserPoints)
+                .filter(UserPoints.user_id == user.user_id)
+                .first()
+            )
+
+            if not user_point:
+                # Create an empty UserPoints record for this user
+                user_point = UserPoints(user_id=user.user_id, total_points=0, available_for_redemtion=0, zavio_token_rewarded=0)
+                db.add(user_point)
+                db.commit()
+                db.refresh(user_point)
+
+            result.append({
+                "id": user_point.user_points_id,
+                "total_points": user_point.total_points,
+                "user_id": user.user_id,
+                "user_name": user.username,
+                "user_email": user.email
+            })
+
+        return result
+
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 
 def create_user_points(db: Session, points: UserPointsCreate):
     try:

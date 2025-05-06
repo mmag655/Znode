@@ -34,7 +34,8 @@ export default function Sidebar() {
       icon: AdminIcon,
       subItems: [
         { name: 'Users', href: '/admin/users', icon: UsersIcon },
-        { name: 'Nodes', href: '/admin/nodes', icon: NodesIcon }
+        { name: 'Nodes', href: '/admin/nodes', icon: NodesIcon },
+        { name: 'Points', href: '/admin/points', icon: RewardsIcon }
       ]
     }] : []),
     { name: 'Contact', href: 'http://Zaivio.com', icon: ContactIcon, external: true }, // New link

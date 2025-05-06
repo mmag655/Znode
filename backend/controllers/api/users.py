@@ -145,7 +145,7 @@ def read_users(user_id: int = Depends(get_current_user_id), db: Session = Depend
             else:
                 item['assigned_nodes'] = 0
         
-        print("user_list: ", user_list)
+        # print("user_list: ", user_list)
         return success_response(user_list, "User retrieved")
         
     except Exception as e:
@@ -162,7 +162,7 @@ def read_user(db: Session = Depends(get_db), user_id: int = Depends(get_current_
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@router.patch("/suspend")
+@router.patch("/suspend/{userId}")
 def suspend_user(userId: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     try:
         user = crud_users.get_user(db, user_id)

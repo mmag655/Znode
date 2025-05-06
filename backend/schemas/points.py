@@ -1,13 +1,15 @@
-from pydantic import BaseModel, condecimal
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
 
 class UserPointsBase(BaseModel):
     user_id: int
-    nodes_purchased: int
-    daily_reward: int
-    date_rewarded: Optional[datetime] = None
+    total_points: int
+    available_for_redemtion: int
+    zavio_token_rewarded: int
+    date_updated: Optional[datetime] = None
+
     class Config:
         from_attributes = True
 
@@ -17,15 +19,14 @@ class UserPointsCreate(UserPointsBase):
 
 
 class UserPointsUpdate(BaseModel):
-    nodes_purchased: Optional[int] = None
-    daily_reward: Optional[int] = None
-    date_rewarded: Optional[datetime] = None
+    total_points: Optional[int] = None
+    available_for_redemtion: Optional[int] = None
+    zavio_token_rewarded: Optional[int] = None
+    date_updated: Optional[datetime] = None
+
     class Config:
         from_attributes = True
-
-    
 
 
 class UserPointsOut(UserPointsBase):
     user_points_id: int
-

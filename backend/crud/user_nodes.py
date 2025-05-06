@@ -15,9 +15,9 @@ def get_user_node(db: Session, user_id: int):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-def get_all_user_nodes(db: Session, user_id: int) -> List['UserNodes']:
+def get_all_user_nodes(db: Session) -> List['UserNodes']:
     try:
-        user_nodes = db.query(UserNodes).filter(UserNodes.user_id == user_id).all()
+        user_nodes = db.query(UserNodes).filter().all()
         return user_nodes
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

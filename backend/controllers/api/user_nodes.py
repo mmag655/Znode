@@ -20,14 +20,14 @@ def create_node(node: UserNodesCreate, db: Session = Depends(get_db)):
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@router.get("/get")
-def read_all(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    try:
-        data = get_all_user_nodes(db, user_id)
-        print("data : ", data)
-        return success_response(UserNodes.to_dict_array(data), "All user nodes retrieved")
-    except Exception as e:
-        return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+# @router.get("/get")
+# def read_all(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+#     try:
+#         data = get_all_user_nodes(db, user_id)
+#         print("data : ", data)
+#         return success_response(UserNodes.to_dict_array(data), "All user nodes retrieved")
+#     except Exception as e:
+#         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @router.get("/{user_node_id}")

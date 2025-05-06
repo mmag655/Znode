@@ -1,4 +1,5 @@
-from sqlalchemy import Transaction
+from typing import Union
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
 from utils.redeeme_tokens import send_tokens_to_wallet
 from crud.wallet import get_wallet
@@ -23,6 +24,25 @@ def get_all_user_points(db: Session, user_id: int):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+def get_all_points(db: Session):
+    try:
+        user_points = (
+            db.query(UserPoints)
+            .options(joinedload(UserPoints.user))  # Load user relationship
+            .all()
+        )
+        return [
+            {
+                "id": point.user_points_id,
+                "total_points": point.total_points,
+                "user_id": point.user_id,
+                "user_name": point.user.username,
+                "user_email": point.user.email
+            }
+            for point in user_points
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 def create_user_points(db: Session, points: UserPointsCreate):
     try:
@@ -36,12 +56,17 @@ def create_user_points(db: Session, points: UserPointsCreate):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-def update_user_points(db: Session, user_id: int, updates: UserPointsUpdate):
+def update_user_points(db: Session, user_id: int, updates: Union[UserPointsUpdate, dict]):
     try:
         db_points = db.query(UserPoints).filter(UserPoints.user_id == user_id).first()
         if not db_points:
             return None
-        for key, value in updates.dict(exclude_unset=True).items():
+
+        # Ensure updates is a dict (convert from Pydantic if needed)
+        if hasattr(updates, "dict"):
+            updates = updates.dict(exclude_unset=True)
+
+        for key, value in updates.items():
             setattr(db_points, key, value)
         db.commit()
         db.refresh(db_points)

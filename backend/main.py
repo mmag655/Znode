@@ -2,6 +2,10 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from services.daily_reward_allocation import add_daily_user_points
 from database import get_db
 from controllers.api.auth import router as auth_router
 from controllers.api.users import router as users_router
@@ -13,8 +17,20 @@ from controllers.api.activity import router as activity_router
 from controllers.api.wallet import router as wallet_router
 from controllers.api.transaction import router as transaction_router
 
-app = FastAPI()
+scheduler = BackgroundScheduler()
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("FastAPI app starting up. Starting scheduler...")
+    scheduler.add_job(add_daily_user_points, 'cron', hour=0, minute=0, id='daily_reward_job', replace_existing=True)
+    scheduler.start()
+    yield
+    print("Shutting down scheduler...")
+    scheduler.shutdown()
+
+app = FastAPI(lifespan=lifespan)
+
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "https://nodes.zaiv.io", "http://localhost"],

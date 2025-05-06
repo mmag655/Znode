@@ -1,6 +1,6 @@
 // /src/lib/api/points.ts
 import apiClient from './client';
-import { PointsResponse, RedemeResponse } from './types';
+import { PointsResponse, RedemeResponse, usersPoints } from './types';
 
 
 export const getPoints = async (): Promise<PointsResponse> => {
@@ -14,3 +14,16 @@ export async function redeemPointsApi(pointsToRedeeme: number): Promise<RedemeRe
     return response.data.data;
 
 }
+
+export const getAllPoints = async (): Promise<usersPoints[]> => {
+    const response = await apiClient.get('/points/admin/get/all');    
+    return response.data.data;
+};
+
+export const updateUserPoints = async (user_id: number, total_points: number): Promise<void> => {
+    const response = await apiClient.put(`/points/admin/update/${user_id}`, {
+        total_points: total_points
+    });
+    return response.data.data;
+};
+

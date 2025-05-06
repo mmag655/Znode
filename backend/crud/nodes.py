@@ -5,6 +5,9 @@ from schemas import nodes as schemas_nodes
 def get_node(db: Session, node_id: int):
     return db.query(Nodes).filter(Nodes.node_id == node_id).first()
 
+def get_node_by_status(db: Session, status: str):
+    return db.query(Nodes).filter(Nodes.status == status).first()
+
 def get_all_nodes(db: Session):
     return db.query(Nodes).all()
 

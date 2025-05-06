@@ -80,6 +80,13 @@ export interface ImportResult {
   }[];
 }
 
+export interface usersPoints {
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  point_id: number;
+  total_points: number;
+}
 
 
 

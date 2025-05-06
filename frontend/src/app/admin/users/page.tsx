@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/app/components/AppLayout';
-import { getAllUsers, updateUserProfile } from '@/lib/api';
+import { getAllUsers, suspendUser, updateUserProfile } from '@/lib/api';
 import { bulkCreateUsers, parseUploadedFile, validateUserData } from '@/lib/utils/file_validation';
 import { toast } from 'react-toastify';
 
@@ -210,6 +210,27 @@ export default function AdminUsers() {
       setLoading(false);
     }
   };
+
+  // In your component
+const handleSuspendUser = async (userId: number, currentStatus: 'active' | 'inactive') => {
+  try {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    
+    // Call the API to suspend/activate user
+    await suspendUser(userId);
+    
+    // Update local state
+    setUsersData(usersData.map(user => 
+      user.user_id === userId 
+        ? { ...user, status: newStatus } 
+        : user
+    ));
+  } catch (error) {
+    console.error('Failed to update user status:', error);
+    setError('Failed to update user status.');
+  }
+};
+
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -445,6 +466,12 @@ export default function AdminUsers() {
                                   Edit
                                 </button>
                               )}
+                                <button 
+                              className={user.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
+                              onClick={() => handleSuspendUser(user.user_id, user.status)}
+                            >
+                              {user.status === 'active' ? 'Suspend' : 'Activate'}
+                            </button>
                             </td>
                           </tr>
                         ))

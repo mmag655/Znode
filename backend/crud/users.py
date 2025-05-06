@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.models import Users
@@ -15,7 +16,7 @@ def get_user(db: Session, user_id: int):
 
 def get_user_by_email(db: Session, email: str):
     try:
-        return db.query(Users).filter(Users.email == email).first()
+        return db.query(Users).filter( and_(Users.email == email, Users.status == 'active')).first()
     except SQLAlchemyError as e:
         print(f"Error in get_user_by_email: {e}")
         return None

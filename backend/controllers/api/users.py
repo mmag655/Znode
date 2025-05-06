@@ -170,9 +170,18 @@ def suspend_user(userId: int, db: Session = Depends(get_db), user_id: int = Depe
             return error_response("Admin user not found", status.HTTP_404_NOT_FOUND)
         if not user.role == "admin":
             return error_response("You are not authorized to suspend users", status.HTTP_403_FORBIDDEN)
+        user_to_update = crud_users.get_user(db, userId)
+        if user_to_update is None:
+            return error_response("User not found", status.HTTP_404_NOT_FOUND)
+        # Check if the user is already suspended
+        if user_to_update.status == "inactive":
+            user_to_update.status = "active"
+        else:
+            user_to_update.status = "inactive"
+            
         user = schemas_users.UserUpdate(
             user_id=userId,
-            status="inactive"
+            status=user_to_update.status
         )
         user = crud_users.update_user(db, userId, user)
         if not user:

@@ -60,7 +60,8 @@ export default function Dashboard() {
     }
   }, [loading, isAuthenticated]);
 
-  if (loading) return <div>Loading...</div>;
+  
+  // if (loading) return <div>Loading...</div>;
 
   if (!isAuthenticated) return null;
 

@@ -48,10 +48,10 @@ export default function AdminPoints() {
     fetchPoints();
   }, [isAdmin, router]);
 
-  const filteredUsers = pointsData.filter((user) =>
-    user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.total_points.toString().includes(searchTerm)
+  const filteredUsers = pointsData.filter((points) =>
+    points.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    points.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    points.total_points.toString().includes(searchTerm)
   );
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {

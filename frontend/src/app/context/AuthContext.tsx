@@ -33,10 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!token) {
         setLoading(false);
-        // Only redirect if not on auth page and not already there
-        if (!pathname.startsWith('/auth')) {
-          router.push('/auth/login');
-        }
         return;
       }
 
@@ -44,19 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await getCurrentUser();
         console.log("User loaded from token:", userData);
         setUser(userData.data);
-
-        // Handle first time login redirect if needed
-        if (userData.data.is_first_time_login && 
-            userData.data.import_status === 'pending' && 
-            !pathname.includes('/auth/reset-password')) {
-          router.push('/auth/reset-password');
-        }
       } catch (err) {
         console.log("Error fetching user. Clearing tokens.", err);
         clearAuthTokens();
-        if (!pathname.startsWith('/auth')) {
-          router.push('/auth/login');
-        }
       } finally {
         setLoading(false);
       }
@@ -71,9 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const forgotPassword = async (email: string) => {
-    const respose = await forgotPasswordAPI(email);
-    console.log("forgot password response : ", respose);
-    return respose.data.reset_token;
+    const response = await forgotPasswordAPI(email);
+    return response.data.reset_token;
   };
 
   const completeFirstTimeLogin = async () => {
@@ -103,22 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       await login({ email, password });
-      
-      await new Promise(resolve => setTimeout(resolve, 50));
-
       const userData = await getCurrentUser();
-      const user = userData.data;
-      setUser(user);
-
-      console.log("user data after login ", userData);
-      console.log("is_first_time_login : ", user.is_first_time_login);
-      console.log("import_status", user.import_status);
-
-      if (user.is_first_time_login && user.import_status === 'pending') {
-        router.push('/auth/reset-password');
-      } else {
-        router.push('/');
-      }
+      setUser(userData.data);
+      router.push('/');
     } catch (err) {
       setError('Login failed');
       throw err;
@@ -179,13 +151,36 @@ export function useAuth() {
   return context;
 }
 
-// Add this new component to handle the loading state
 export function AuthInitializer({ children }: { children: ReactNode }) {
-  const { loading } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  }
+  useEffect(() => {
+    if (loading) return;
 
-  return <>{children}</>;
+    // Redirect unauthenticated users
+    if (!isAuthenticated && !pathname.startsWith('/auth')) {
+      router.push('/auth/login');
+      return;
+    }
+
+    // Handle first-time login
+    if (user?.is_first_time_login && 
+        user?.import_status === 'pending' && 
+        !pathname.includes('/auth/reset-password')) {
+      router.push('/auth/reset-password');
+    }
+  }, [loading, isAuthenticated, user, pathname, router]);
+
+  return (
+    <>
+      {loading && (
+        <div className="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
+          Loading...
+        </div>
+      )}
+      {children}
+    </>
+  );
 }

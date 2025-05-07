@@ -34,6 +34,7 @@ export default function AdminPoints() {
     const fetchPoints = async () => {
       try {
         const pointsList = await getAllPoints();
+        console.log("Fetched points data:", pointsList);
         setPointsData(pointsList);
         setError(null);
       } catch (err) {
@@ -174,6 +175,12 @@ export default function AdminPoints() {
                             {sortField === "total_points" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
                           </div>
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort("last_updated")}>
+                          <div className="flex items-center">
+                            Last Updated
+                            {sortField === "last_updated" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
+                          </div>
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -204,6 +211,9 @@ export default function AdminPoints() {
                             ) : (
                               <span>{points.total_points}</span>
                             )}
+                          </td>                         
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {points.last_updated ? new Date(points.last_updated).toLocaleString() : 'Never'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             {editingUserId === points.user_id ? (

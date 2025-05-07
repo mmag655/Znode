@@ -48,7 +48,8 @@ def get_all_points(db: Session):
                 "total_points": user_point.total_points,
                 "user_id": user.user_id,
                 "user_name": user.username,
-                "user_email": user.email
+                "user_email": user.email,
+                "last_updated": user_point.date_updated.isoformat() if user_point.date_updated else None,
             })
 
         return result

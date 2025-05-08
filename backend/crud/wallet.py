@@ -42,7 +42,6 @@ def get_wallet(user_id: int, db: Session):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-# Update wallet
 def update_wallet(user_id: int, new_wallet_address: str, db: Session):
     try:
         wallet = db.query(Wallets).filter(Wallets.user_id == user_id).first()
@@ -52,11 +51,12 @@ def update_wallet(user_id: int, new_wallet_address: str, db: Session):
             wallet = Wallets(
                 user_id=user_id,
                 wallet_address=new_wallet_address,
-                wallet_type="ERC-20"  # Assuming a default type, adjust as necessary
+                wallet_type="Polygon (ERC-20)"  # Adjust as necessary
             )
-            # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
+            db.add(wallet)  # ✅ Add to session before commit
 
-        wallet.wallet_address = new_wallet_address  # Actually update it
+        else:
+            wallet.wallet_address = new_wallet_address  # Update existing wallet
 
         db.commit()
         db.refresh(wallet)
@@ -66,7 +66,6 @@ def update_wallet(user_id: int, new_wallet_address: str, db: Session):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
 
 # Delete wallet
 def delete_wallet(user_id: int, wallet_address: str, db: Session):

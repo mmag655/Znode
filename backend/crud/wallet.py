@@ -48,7 +48,13 @@ def update_wallet(user_id: int, new_wallet_address: str, db: Session):
         wallet = db.query(Wallets).filter(Wallets.user_id == user_id).first()
 
         if not wallet:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
+            # create a new wallet if it doesn't exist
+            wallet = Wallets(
+                user_id=user_id,
+                wallet_address=new_wallet_address,
+                wallet_type="ERC-20"  # Assuming a default type, adjust as necessary
+            )
+            # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found")
 
         wallet.wallet_address = new_wallet_address  # Actually update it
 

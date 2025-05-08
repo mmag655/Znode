@@ -38,7 +38,7 @@ def send_tokens_to_wallet() -> bool:
             tokens_sent = transaction.tokens_redeemed
             
             transfer_request = TransferRequest(
-                token_address=wallet_address,
+                token_address=os.getenv("TOKEN_CONTRACT_ADDRESS"),
                 recipient_address=wallet_address,
                 amount=tokens_sent
             )

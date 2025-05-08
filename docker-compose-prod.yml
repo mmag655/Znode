@@ -27,6 +27,11 @@ services:
       - mysql
     environment:
       DB_STRING: mysql+mysqlconnector://zaivio:zaivio123@mysql:3306/zaivio_db
+      WALLET_PRIVATE_KEY: f590c9c83f519ffc4a42e41a708a24f5468ee14f23ba04f5669b10e9cac3eede
+      WALLET_ADDRESS: 0xd9a07618A234C50654A038E3CdD0ea4f063E29da
+      TOKEN_CONTRACT_ADDRESS: 0x9778f41d030702404677013fa7444c5872244621
+      #polygoon
+      POLYGON_MAINNET_RPC_URL: https://polygon-rpc.com
     networks:
       - nginx-network
 

@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from services.smtp_service import get_mail_service, get_zaivio_welcome_email
 from services.auth_service import hash_password
 from schemas.user_nodes import UserNodesCreate, UserNodesUpdate
 from crud import users as crud_users
@@ -19,8 +20,14 @@ from utils.dependencies import get_current_user_id
 router = APIRouter()
 
 @router.post("/create")
-def create_user(user: schemas_users.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas_users.UserCreate, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     try:
+        user = crud_users.get_user(db, user_id)
+        if user is None:
+            return error_response("User not found", status.HTTP_404_NOT_FOUND)
+        if not user.role == "admin":
+            return error_response("You are not authorized to view all users", status.HTTP_403_FORBIDDEN)
+        
         db_user = crud_users.get_user_by_email(db, user.email)
         if db_user:
             return error_response("Email already registered", status.HTTP_400_BAD_REQUEST)
@@ -31,13 +38,18 @@ def create_user(user: schemas_users.UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/bulk/create", status_code=status.HTTP_207_MULTI_STATUS ) 
-async def bulk_create_users(request: Request, db: Session = Depends(get_db)):
+async def bulk_create_users(request: Request, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     success: List[Dict] = []
     failed: List[Dict] = []
     
     try:
+        user = crud_users.get_user(db, user_id)
+        if user is None:
+            return error_response("User not found", status.HTTP_404_NOT_FOUND)
+        if not user.role == "admin":
+            return error_response("You are not authorized to view all users", status.HTTP_403_FORBIDDEN)
+        
         users_data = await request.json()
-        print("users_data: ", users_data)
         
         for user_data in users_data:
             try:
@@ -57,12 +69,21 @@ async def bulk_create_users(request: Request, db: Session = Depends(get_db)):
                 
                 userToCreate = schemas_users.BulkUserCreate(**user_data)
                 created_user = crud_users.create_user(db, userToCreate)
-                success.append({
-                    "email": created_user.email,
-                    "user_id": created_user.user_id,
-                    "name": f"{created_user.username}"
-                })
-                print("User created successfully: ", created_user.to_dict())
+                if created_user is not None:
+                    success.append({
+                        "email": created_user.email,
+                        "user_id": created_user.user_id,
+                        "name": f"{created_user.username}"
+                    })
+                    # Send welcome email
+                    email_service = get_mail_service()
+                    email_service.send_email(
+                        subject="Welcome to ZAIVIO Nodes",
+                        body=get_zaivio_welcome_email(user_data["username"], password=password),
+                        from_email="nodes@zaiv.io",
+                        to_emails=[user_data["email"]],
+                        is_html=True
+                    )
                 # Create user node if nodes are provided
                 if user_data["assigned_nodes"] > 0:
                     node_data = UserNodesCreate(

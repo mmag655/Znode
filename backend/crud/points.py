@@ -1,7 +1,7 @@
 from typing import Union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
-from utils.redeeme_tokens import send_tokens_to_wallet
+from utils.timezone import now_gmt5
 from crud.wallet import get_wallet
 from models.models import Transactions, UserPoints, Users
 from schemas.points import UserPointsCreate, UserPointsUpdate
@@ -128,23 +128,20 @@ def redeem_user_points(points_to_redeem: int, user_id: int, db: Session):
             # Get wallet address
             wallet = get_wallet(user_id, db)
 
-            # Send tokens
-            transaction_successful = send_tokens_to_wallet(wallet.wallet_address, tokens_sent)
-            if not transaction_successful:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send tokens to wallet")
-
             # Record transaction
             transaction = Transactions(
                 user_id=user_id,
                 wallet_address=wallet.wallet_address,
                 tokens_redeemed=points_to_redeem,
-                transaction_status="success"
+                transaction_status="onhold",
+                transaction_date=now_gmt5()
             )
             db.add(transaction)
             
 
         # Outside the `with` block: safe to refresh (session is still valid)
         db.refresh(transaction)
+        
 
         return {
             "total_redeemed_points": points_to_redeem,

@@ -75,9 +75,9 @@ export default function Transactions() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.transaction_id}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          tx.transaction_status === 'success'
+                          tx.transaction_status === 'success' || tx.transaction_status === 'approved'
                             ? 'bg-green-100 text-green-800'
-                            : tx.transaction_status === 'pending'
+                            : tx.transaction_status === 'pending' || tx.transaction_status === 'onhold'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-red-100 text-red-800'
                         }`}>

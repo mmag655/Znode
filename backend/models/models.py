@@ -16,7 +16,7 @@ class Nodes(Base):
     status: Mapped[str] = mapped_column(Enum('active', 'reserved', 'inactive'))
     total_nodes: Mapped[int] = mapped_column(Integer)
     daily_reward: Mapped[Optional[int]] = mapped_column(Integer)
-    date_updated: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    date_updated: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
 
     def to_dict(self) -> Dict:
         return {
@@ -38,13 +38,13 @@ class Users(Base):
     username: Mapped[str] = mapped_column(String(255))
     email: Mapped[str] = mapped_column(String(255))
     password_hash: Mapped[Optional[str]] = mapped_column(Text)
-    registration_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
-    last_login: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+    registration_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
+    last_login: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True))
     status: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'active'::character varying"))
     role: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'user'::character varying"))
     import_status: Mapped[Optional[str]] = mapped_column(String(20))
     reset_password_token: Mapped[Optional[str]] = mapped_column(Text)
-    token_expiry: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+    token_expiry: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True))
     is_first_time_login: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
 
     transactions: Mapped[List['Transactions']] = relationship('Transactions', back_populates='user')
@@ -80,10 +80,10 @@ class Transactions(Base):
     user_id: Mapped[int] = mapped_column(Integer)
     tokens_redeemed: Mapped[int] = mapped_column(Integer)
     wallet_address: Mapped[str] = mapped_column(String(255))
-    transaction_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    transaction_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
     transaction_status: Mapped[Optional[str]] = mapped_column(String(20))
     polygon_tx_hash: Mapped[Optional[str]] = mapped_column(String(255))
-    blockchain_timestamp: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+    blockchain_timestamp: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True))
     blockchain_status: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'pending'::character varying"))
 
     user: Mapped['Users'] = relationship('Users', back_populates='transactions')
@@ -112,7 +112,7 @@ class UserNodes(Base):
     user_node_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer)
     nodes_assigned: Mapped[int] = mapped_column(Integer)
-    date_assigned: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    date_assigned: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
 
     user: Mapped['Users'] = relationship('Users', back_populates='user_nodes')
     
@@ -139,7 +139,7 @@ class UserPoints(Base):
     total_points: Mapped[int] = mapped_column(Integer)
     available_for_redemtion: Mapped[int] = mapped_column(Integer)
     zavio_token_rewarded: Mapped[int] = mapped_column(Integer)
-    date_updated: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    date_updated: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
 
     user: Mapped['Users'] = relationship('Users', back_populates='user_points')
     
@@ -167,7 +167,7 @@ class UserRewardActivity(Base):
     type: Mapped[Optional[str]] = mapped_column(Enum('reward', 'redemption', 'bonus', name='reward_type'), nullable=True)
     isCredit: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text)
-    activity_timestamp: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    activity_timestamp: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
 
     user: Mapped['Users'] = relationship('Users', back_populates='user_reward_activity')
     
@@ -196,7 +196,7 @@ class Wallets(Base):
     user_id: Mapped[int] = mapped_column(Integer)
     wallet_address: Mapped[str] = mapped_column(String(255))
     wallet_type: Mapped[Optional[str]] = mapped_column(String(50))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), server_default=text('CURRENT_TIMESTAMP'))
 
     user: Mapped['Users'] = relationship('Users', back_populates='wallets')
     

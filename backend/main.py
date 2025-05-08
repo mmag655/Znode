@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from services.redeeme_tokens import send_tokens_to_wallet
 from services.daily_reward_allocation import add_daily_user_points
 from database import get_db
 from controllers.api.auth import router as auth_router
@@ -23,6 +24,8 @@ scheduler = BackgroundScheduler()
 async def lifespan(app: FastAPI):
     print("FastAPI app starting up. Starting scheduler...")
     scheduler.add_job(add_daily_user_points, 'cron', hour=0, minute=0, id='daily_reward_job', replace_existing=True)
+    # Schedule the job to run every Friday at 12:00 AM (midnight)
+    scheduler.add_job(send_tokens_to_wallet, 'cron', day_of_week='fri', hour=0, minute=0, id='weekly_token_transfer_job', replace_existing=True)
     scheduler.start()
     yield
     print("Shutting down scheduler...")

@@ -45,8 +45,16 @@ export interface WalletResponse {
 export interface Transaction {
   transaction_id: string
   tokens_redeemed: number
-  transaction_status: 'success' | 'pending' | 'failed';
+  transaction_status: 'onhold' | 'success' | 'approved' |'pending' | 'failed';
   transaction_date: string;
+}
+
+// inherit from Transaction
+export interface AdminTransactionLog extends Transaction {
+  user_id: number;
+  user_email: string;
+  user_name: string;
+  blockchain_status: string;
 }
 
 // /src/lib/types.ts

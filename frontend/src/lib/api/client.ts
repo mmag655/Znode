@@ -98,6 +98,13 @@ apiClient.interceptors.response.use(
 
     // Handle other errors
     switch (status) {
+      case 401:
+        toast.info(errorMessage || 'Session expired. Please log in again.');
+        clearAuthTokens();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+        break;
       case 400:
         toast.error(errorMessage || 'Bad request. Please check your input.');
         break;

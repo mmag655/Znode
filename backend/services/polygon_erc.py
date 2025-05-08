@@ -9,11 +9,12 @@ from web3.exceptions import Web3Exception
 load_dotenv()
 
 # Polygon Amoy Testnet Configuration
-AMOY_RPC_URL = os.getenv("POLYGON_RPC_URL", "https://rpc-amoy.polygon.technology")  # Official Amoy RPC
-w3 = Web3(Web3.HTTPProvider(AMOY_RPC_URL))
+# AMOY_RPC_URL = os.getenv("POLYGON_RPC_URL", "https://rpc-amoy.polygon.technology")  # Official Amoy RPC
+POLYGON_MAINNET_RPC = os.getenv("POLYGON_MAINNET_RPC_URL", "https://polygon-rpc.com")
+w3 = Web3(Web3.HTTPProvider(POLYGON_MAINNET_RPC))
 
 # Wallet Configuration (YOUR ADDRESS)
-MY_WALLET_ADDRESS = os.getenv("WALLET_ADDRESS", "0x167Ad231a26CFFf53D4cBB67c27DBBD727eD39f4")
+MY_WALLET_ADDRESS = os.getenv("WALLET_ADDRESS", "")
 MY_PRIVATE_KEY = os.getenv("WALLET_PRIVATE_KEY")
 
 # Standard ERC-20 ABI
@@ -63,19 +64,21 @@ def validate_token_address(token_address: str) -> bool:
     try:
         checksum_addr = Web3.to_checksum_address(token_address)
         contract = w3.eth.contract(address=checksum_addr, abi=ERC20_ABI)
-        decimals = contract.functions.decimals().call()
+        contract.functions.decimals().call()  # Call to check if the contract is valid
         return True
-    except:
-        return False
+    except ValueError:
+        raise ValueError("Invalid token address format.")
+    except Exception as e:
+        raise ValueError(f"Error validating token address: {str(e)}")
 
 def check_token_balance(wallet: WalletRequest, token_address: str) -> dict:
     try:
         if not w3.is_connected():
-            raise Web3Exception("Not connected to Amoy network")
+            raise ConnectionError("Not connected to Amoy network.")
         
         token_address = Web3.to_checksum_address(token_address)
         if not validate_token_address(token_address):
-            raise HTTPException(status_code=400, detail="Invalid ERC-20 token")
+            raise ValueError("Invalid ERC-20 token address.")
             
         wallet_address = Web3.to_checksum_address(wallet.wallet_address)
         contract = w3.eth.contract(address=token_address, abi=ERC20_ABI)
@@ -90,13 +93,17 @@ def check_token_balance(wallet: WalletRequest, token_address: str) -> dict:
             "balance": human_balance,
             "decimals": decimals
         }
+    except ValueError as e:
+        raise ValueError(f"Invalid token address or balance fetch error: {str(e)}")
+    except ConnectionError as e:
+        raise ConnectionError(f"Connection error: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise Exception(f"Failed to check token balance: {str(e)}")
 
 def transfer_tokens(transfer_request: TransferRequest) -> dict:
     try:
         if not w3.is_connected():
-            raise Web3Exception("Not connected to Amoy network")
+            raise ConnectionError("Not connected to the network.")
         
         # Validate addresses
         token_address = Web3.to_checksum_address(transfer_request.token_address)
@@ -104,7 +111,7 @@ def transfer_tokens(transfer_request: TransferRequest) -> dict:
         sender = Web3.to_checksum_address(MY_WALLET_ADDRESS)
         
         if not validate_token_address(token_address):
-            raise HTTPException(status_code=400, detail="Invalid token address")
+            raise ValueError("Invalid token address.")
         
         contract = w3.eth.contract(address=token_address, abi=ERC20_ABI)
         decimals = contract.functions.decimals().call()
@@ -112,12 +119,12 @@ def transfer_tokens(transfer_request: TransferRequest) -> dict:
         
         # Check balance
         if contract.functions.balanceOf(sender).call() < raw_amount:
-            raise HTTPException(status_code=400, detail="Insufficient balance")
+            raise ValueError("Insufficient balance for the transaction.")
         
         # Build and send transaction
         nonce = w3.eth.get_transaction_count(sender)
         tx = contract.functions.transfer(recipient, raw_amount).build_transaction({
-            'chainId': 80002,  # Amoy Testnet chain ID
+            'chainId': 137,  # Polygon Mainnet chain ID
             'gas': 200000,
             'gasPrice': w3.eth.gas_price,
             'nonce': nonce,
@@ -129,16 +136,20 @@ def transfer_tokens(transfer_request: TransferRequest) -> dict:
         return {
             "status": "success",
             "tx_hash": tx_hash.hex(),
-            "explorer_link": f"https://amoy.polygonscan.com/tx/{tx_hash.hex()}"
+            "explorer_link": f"https://polygonscan.com/tx/{tx_hash.hex()}"
         }
         
+    except ValueError as e:
+        raise ValueError(f"Token transfer failed: {str(e)}")
+    except ConnectionError as e:
+        raise ConnectionError(f"Network connection error: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise Exception(f"Transaction failed: {str(e)}")
 
 # Example Usage with Amoy Testnet Token
 if __name__ == "__main__":
     # Test LINK token on Amoy
-    TEST_LINK = "0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904"
+    TEST_LINK = os.getenv("TOKEN_CONTRACT_ADDRESS", "")
     
     # 1. Validate token
     print(f"Valid token: {validate_token_address(TEST_LINK)}")

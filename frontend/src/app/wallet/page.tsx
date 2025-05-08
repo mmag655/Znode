@@ -77,7 +77,7 @@ export default function Wallet() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-medium mb-4">Your Token Contract Address</h2>
+          <h2 className="text-lg font-medium mb-4">Your Wallet Address</h2>
           {loading ? (
             <p>Loading...</p>
           ) : isEditing ? (
@@ -114,7 +114,7 @@ export default function Wallet() {
           ) : (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Polygon (ERC-20) Token Contract Address</p>
+                <p className="text-sm text-gray-500">Polygon (ERC-20) Wallet Address</p>
                 <p className="mt-1 text-sm font-medium text-gray-900 break-all">{walletAddress}</p>
               </div>
               <button

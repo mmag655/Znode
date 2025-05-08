@@ -8,8 +8,8 @@ services:
       MYSQL_DATABASE: zaivio_db
       MYSQL_USER: zaivio
       MYSQL_PASSWORD: zaivio123
-    # ports:
-    #   - '3307:3306'
+    ports:
+      - '3307:3306'
     volumes:
       - /root/docker-volumes/mysql-nodes:/var/lib/mysql
       - ./db_dump.sql:/docker-entrypoint-initdb.d/db_dump.sql

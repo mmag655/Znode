@@ -68,7 +68,7 @@ export default function RecentActivity() {
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
-                        hour12: true
+                        timeZone: 'America/New_York'
                       })}
                     </time>
                     </div>

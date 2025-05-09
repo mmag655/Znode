@@ -67,7 +67,7 @@ export default function Transactions() {
                           hour: '2-digit',
                           minute: '2-digit',
                           second: '2-digit',
-                           timeZone: 'America/New_York'
+                          timeZone: 'America/New_York'
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

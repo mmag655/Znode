@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Union
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
@@ -105,51 +106,49 @@ def delete_user_points(db: Session, user_points_id: int):
 
 def redeem_user_points(points_to_redeem: int, user_id: int, db: Session):
     try:
-        # Use transaction context manager
-        with db.begin():
-            # Fetch user points
-            user_points = db.query(UserPoints).filter(UserPoints.user_id == user_id).first()
-            if not user_points:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        # Fetch user points
+        user_points = db.query(UserPoints).filter(UserPoints.user_id == user_id).first()
+        if not user_points:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-            available_points = user_points.available_for_redemtion
-            
-            if available_points < points_to_redeem:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough points to redeem")
-
-            # Calculate tokens
-            factor = 1
-            tokens_sent = points_to_redeem * factor
-
-            # Update user points
-            user_points.available_for_redemtion -= points_to_redeem
-            user_points.zavio_token_rewarded = (user_points.zavio_token_rewarded or 0) + points_to_redeem
-
-            # Get wallet address
-            wallet = get_wallet(user_id, db)
-
-            # Record transaction
-            transaction = Transactions(
-                user_id=user_id,
-                wallet_address=wallet.wallet_address,
-                tokens_redeemed=points_to_redeem,
-                transaction_status="onhold",
-                transaction_date=now_gmt5()
-            )
-            db.add(transaction)
-            
-
-        # Outside the `with` block: safe to refresh (session is still valid)
-        db.refresh(transaction)
+        available_points = user_points.available_for_redemtion
         
+        if available_points < points_to_redeem:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough points to redeem")
+
+        # Calculate tokens
+        factor = 1  # TODO: Load from env
+        tokens_sent = points_to_redeem * factor
+
+        # Update user points
+        user_points.available_for_redemtion -= points_to_redeem
+        user_points.zavio_token_rewarded = (user_points.zavio_token_rewarded or 0) + points_to_redeem
+
+        # Get wallet address
+        wallet = get_wallet(user_id, db)
+
+        # Record transaction
+        transaction = Transactions(
+            user_id=user_id,
+            wallet_address=wallet.wallet_address,
+            tokens_redeemed=tokens_sent,
+            transaction_status="onhold",
+            transaction_date=datetime.now(timezone.utc)
+        )
+        db.add(transaction)
+        db.commit()
+        db.refresh(transaction)
 
         return {
             "total_redeemed_points": points_to_redeem,
             "remaining_points": user_points.available_for_redemtion,
             "transaction_id": transaction.transaction_id,
-            "timestamp": transaction.blockchain_timestamp
+            "transaction_date": transaction.transaction_date.isoformat() if transaction.transaction_date else None,
         }
 
+    except HTTPException:
+        raise  # re-raise HTTP-related errors
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+

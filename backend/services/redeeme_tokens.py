@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import os
 from requests import Session
 from crud.users import get_user
@@ -17,7 +18,7 @@ def send_tokens_to_wallet() -> bool:
     """
     try:
         db: Session = next(get_db())
-        print(f"⏰ Running transaction(approved) transfer job at {now_gmt5()}")
+        print(f"⏰ Running transaction(approved) transfer job at {datetime.now(timezone.utc)}")
         
         # Fetch all transactions with "approved" status
         transactions = db.query(Transactions).filter(Transactions.transaction_status == "approved").all()
@@ -30,7 +31,7 @@ def send_tokens_to_wallet() -> bool:
             if not wallet_address:
                 print(f"⚠️ No wallet address found for user {user_id}. Skipping transaction.")
                 transaction.transaction_status = "failed"
-                transaction.date_updated = now_gmt5()
+                transaction.date_updated = datetime.now(timezone.utc)
                 db.add(transaction)
                 db.commit()  # Commit to database
                 continue
@@ -55,7 +56,7 @@ def send_tokens_to_wallet() -> bool:
             if response["status"] == "success":
                 print(f"Tokens sent successfully to {wallet_address}.")
                 transaction.transaction_status = "success"
-                transaction.blockchain_timestamp = now_gmt5()
+                transaction.blockchain_timestamp = datetime.now(timezone.utc)
                 transaction.polygon_tx_hash = response["tx_hash"]
                 # Send success email
                 email_service.send_email(
@@ -87,7 +88,7 @@ def send_tokens_to_wallet() -> bool:
                     is_html=True
                 )
 
-            transaction.date_updated = now_gmt5()
+            transaction.date_updated = datetime.now(timezone.utc)
             db.add(transaction)
             db.commit()
 

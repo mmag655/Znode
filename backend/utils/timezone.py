@@ -9,3 +9,5 @@ def now_gmt5():
 def to_gmt5(dt: datetime) -> datetime:
     """Convert any aware datetime to GMT-5"""
     return dt.astimezone(GMT_MINUS_5)
+
+print(datetime.now(timezone.utc))

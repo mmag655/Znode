@@ -1,6 +1,6 @@
 # src/crud/transaction.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from utils.timezone import now_gmt5
 from models.models import Transactions, Users
@@ -72,7 +72,7 @@ def approve_transaction(db: Session, transaction_id: int):
 
         # Update the transaction status
         transaction.transaction_status = 'approved'
-        transaction.transaction_date = now_gmt5()
+        transaction.transaction_date = datetime.now(timezone.utc)
         db.commit()
         db.refresh(transaction)
         return transaction

@@ -12,9 +12,9 @@ from schemas.points import UserPointsCreate, UserPointsUpdate
 
 def add_daily_user_points():
     db: Session = next(get_db())
-    print(f"⏰ Running daily reward job at {now_gmt5()}")
+    print(f"⏰ Running daily reward job at {datetime.now(timezone.utc)}")
 
-    # today = now_gmt5().date()
+    # today = datetime.now(timezone.utc).date()
 
     # Step 1: Get total active nodes and reward amount
     active_nodes = get_node_by_status(db, status="active")
@@ -54,7 +54,7 @@ def add_daily_user_points():
                 total_points=points_to_add,
                 available_for_redemtion=points_to_add,
                 zavio_token_rewarded=0,
-                date_updated=now_gmt5()
+                date_updated=datetime.now(timezone.utc)
             )
             user_points = create_user_points(db, points=new_points)
 
@@ -62,7 +62,7 @@ def add_daily_user_points():
         update_data = UserPointsUpdate(
             total_points=user_points.total_points,
             available_for_redemtion=user_points.available_for_redemtion,
-            date_updated=now_gmt5()
+            date_updated=datetime.now(timezone.utc)
         )
         update_user_points(db, user_id=user_id, updates=update_data)
 
@@ -75,7 +75,7 @@ def add_daily_user_points():
                 type="reward",
                 isCredit=True,
                 description=f"Daily rewarded nodes",
-                activity_timestamp=now_gmt5()
+                activity_timestamp=datetime.now(timezone.utc)
             )
         )
 

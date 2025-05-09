@@ -17,15 +17,18 @@ from controllers.api.admin_nodes import router as admin_nodes_router
 from controllers.api.activity import router as activity_router
 from controllers.api.wallet import router as wallet_router
 from controllers.api.transaction import router as transaction_router
+from pytz import timezone
+
+GMT_MINUS_5 = timezone('Etc/GMT+5')
 
 scheduler = BackgroundScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("FastAPI app starting up. Starting scheduler...")
-    scheduler.add_job(add_daily_user_points, 'cron', hour=0, minute=0, id='daily_reward_job', replace_existing=True)
+    scheduler.add_job(add_daily_user_points, 'cron', hour=0, minute=0, id='daily_reward_job', replace_existing=True, timezone=GMT_MINUS_5)
     # Schedule the job to run every Friday at 12:00 AM (midnight)
-    scheduler.add_job(send_tokens_to_wallet, 'cron', day_of_week='fri', hour=0, minute=0, id='weekly_token_transfer_job', replace_existing=True)
+    scheduler.add_job(send_tokens_to_wallet, 'cron', day_of_week='fri', hour=0, minute=0, id='weekly_token_transfer_job', replace_existing=True, timezone=GMT_MINUS_5)
     scheduler.start()
     yield
     print("Shutting down scheduler...")

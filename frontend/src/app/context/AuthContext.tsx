@@ -117,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logout();
       setUser(null);
+      clearAuthTokens();
       router.push('/auth/login');
     } catch (err) {
       console.error('Logout failed', err);

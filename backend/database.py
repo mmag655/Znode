@@ -9,7 +9,7 @@ load_dotenv()
 DB_STRING = os.getenv("DB_STRING", "")
 
 # Create the engine for PostgreSQL
-engine = create_engine(DB_STRING)
+engine = create_engine(DB_STRING, pool_pre_ping=True, pool_recycle=3600)
 
 # Create a sessionmaker for working with the DB
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

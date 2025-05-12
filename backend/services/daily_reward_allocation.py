@@ -8,10 +8,11 @@ from crud.user_nodes import get_all_user_nodes
 from models.models import UserPoints, UserRewardActivity
 from database import get_db
 from schemas.points import UserPointsCreate, UserPointsUpdate
+from database import SessionLocal
 
 
 def add_daily_user_points():
-    db: Session = next(get_db())
+    db = SessionLocal()
     print(f"⏰ Running daily reward job at {datetime.now(timezone.utc)}")
 
     # today = datetime.now(timezone.utc).date()

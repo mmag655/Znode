@@ -8,6 +8,7 @@ import {
   createNodes,
 } from '@/lib/api/nodes';
 import { NodesResponse } from '@/lib/api/types';
+import { toast } from 'react-toastify';
 
 export default function AdminNodes() {
   const [nodes, setNodes] = useState<NodesResponse[]>([]);
@@ -54,9 +55,10 @@ export default function AdminNodes() {
       };
 
       const response = await createNodes(newNodeData);
-      setNodes([...nodes, response]);
-      setNewNodeCount('');
-      setNewNodeReward('');
+      toast.info("Nodes category already added you modify")
+      // setNodes([...nodes, response]);
+      // setNewNodeCount('');
+      // setNewNodeReward('');
     } catch (err) {
       setError('Failed to create node');
       console.error(err);

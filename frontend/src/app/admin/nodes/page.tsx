@@ -5,7 +5,6 @@ import AppLayout from '@/app/components/AppLayout';
 import { 
   getAllNodes,
   updateNodes,
-  createNodes,
 } from '@/lib/api/nodes';
 import { NodesResponse } from '@/lib/api/types';
 import { toast } from 'react-toastify';
@@ -47,15 +46,16 @@ export default function AdminNodes() {
     
     try {
       setLoading(true);
-      const newNodeData = {
-        total_nodes: Number(newNodeCount),
-        daily_reward: Number(newNodeReward) || 0,
-        status: newNodeStatus,
-        date_updated: new Date().toISOString()
-      };
+      // const newNodeData = {
+      //   total_nodes: Number(newNodeCount),
+      //   daily_reward: Number(newNodeReward) || 0,
+      //   status: newNodeStatus,
+      //   date_updated: new Date().toISOString()
+      // };
 
-      const response = await createNodes(newNodeData);
-      toast.info("Nodes category already added you modify")
+      // const response = await createNodes(newNodeData);
+
+      toast.info("Nodes category already added can you modify")
       // setNodes([...nodes, response]);
       // setNewNodeCount('');
       // setNewNodeReward('');

@@ -66,6 +66,8 @@ async def bulk_create_users(request: Request, user_id: int = Depends(get_current
                 password = user_data.get("password", f"{user_data['username'][:3]}Xrbnh@123")
                 hashed_password = hash_password(password)
                 user_data["password"] = hashed_password
+                user_data["import_status"] = "pending"
+                user_data["is_first_time_login"] = True
                 
                 userToCreate = schemas_users.BulkUserCreate(**user_data)
                 created_user = crud_users.create_user(db, userToCreate)

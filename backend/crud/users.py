@@ -36,6 +36,8 @@ def create_user(db: Session, user: UserCreate):
             username=user.username,
             email=user.email,
             password_hash=user.password,
+            import_status=user.import_status,
+            is_first_time_login= user.is_first_time_login
         )
         db.add(db_user)
         db.commit()

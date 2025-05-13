@@ -12,6 +12,8 @@ class UserBase(BaseModel):
     
 class UserCreate(UserBase):
     password: str
+    is_first_time_login: Optional[bool] = None
+    import_status: Optional[str] = None
 
 class BulkUserCreate(BaseModel):
     username: str
@@ -20,6 +22,7 @@ class BulkUserCreate(BaseModel):
     import_status: Optional[str] = "pending"
     status: Optional[str] = "active"
     assigned_nodes: Optional[int] = 0
+    is_first_time_login: Optional[bool] = None
 
     class Config:
         from_attributes = True

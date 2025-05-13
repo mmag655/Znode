@@ -29,7 +29,7 @@ def read_user_reward_activities(db: Session = Depends(get_db), user_id: int = De
         
         if not activity_list:
             return success_response(data = {}, message="No reward activities found")
-        
+        print(activity_list)
         return success_response(activity_list, "User reward activities retrieved")
     
     except Exception as e:

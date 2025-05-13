@@ -20,9 +20,13 @@ export const getAllPoints = async (): Promise<usersPoints[]> => {
     return response.data.data;
 };
 
-export const updateUserPoints = async (user_id: number, total_points: number): Promise<void> => {
+export const updateUserPoints = async (user_id: number, total_points: number, available_for_redemtion: number): Promise<void> => {
+    const points_already_redeemed = total_points - available_for_redemtion
     const response = await apiClient.put(`/points/admin/update/${user_id}`, {
-        total_points: total_points
+        total_points: total_points,
+        available_for_redemtion: available_for_redemtion,
+        zavio_token_rewarded: points_already_redeemed
+
     });
     return response.data.data;
 };

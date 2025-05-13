@@ -47,6 +47,7 @@ def get_all_points(db: Session):
             result.append({
                 "id": user_point.user_points_id,
                 "total_points": user_point.total_points,
+                "available_for_redemption": user_point.available_for_redemtion,
                 "user_id": user.user_id,
                 "user_name": user.username,
                 "user_email": user.email,

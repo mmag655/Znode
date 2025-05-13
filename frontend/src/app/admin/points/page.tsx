@@ -15,6 +15,7 @@ export default function AdminPoints() {
   const [error, setError] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [editedPoints, setEditedPoints] = useState<number>(0);
+  const [availableForRedemption, setAvailableForRedemption] = useState<number>(0);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof usersPoints>("user_name");
@@ -88,8 +89,13 @@ export default function AdminPoints() {
 
   const handleSaveClick = async (points: usersPoints) => {
     try {
-      await updateUserPoints(points.user_id, editedPoints);
-      toast.success("Points updated successfully");
+      if (availableForRedemption > editedPoints)
+        toast.warning("Available for redeemtion can't be greater than total points")
+      else
+      {
+        await updateUserPoints(points.user_id, editedPoints, availableForRedemption);
+        toast.success("Points updated successfully");
+      }
       const refreshed = await getAllPoints();
       setPointsData(refreshed);
       setEditingUserId(null);
@@ -200,18 +206,38 @@ export default function AdminPoints() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {editingUserId === points.user_id ? (
-                              <input
-                                type="number"
-                                className="border rounded px-2 py-1 w-24"
-                                value={editedPoints}
-                                onChange={(e) => setEditedPoints(Number(e.target.value))}
-                              />
-                            ) : (
+                         <td className="px-6 py-4 whitespace-nowrap">
+                          {editingUserId === points.user_id ? (
+                            <div className="flex flex-col space-y-2">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+                                <input
+                                  type="number"
+                                  className="border rounded px-2 py-1 w-24"
+                                  value={editedPoints}
+                                  onChange={(e) => setEditedPoints(Number(e.target.value))}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Redeemable Points</label>
+                                <input
+                                  type="number"
+                                  className="border rounded px-2 py-1 w-24"
+                                  value={availableForRedemption}
+                                  onChange={(e) => setAvailableForRedemption(Number(e.target.value))}
+                                  max={editedPoints} // Optional: ensure redeemable doesn't exceed total
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col">
                               <span>{points.total_points}</span>
-                            )}
-                          </td>                         
+                              <span className="text-xs text-gray-500">
+                                (Available: {points.available_for_redemption || 0})
+                              </span>
+                            </div>
+                          )}
+                        </td>                        
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {points.last_updated ? new Date(points.last_updated).toLocaleString() : 'Never'}
                           </td>

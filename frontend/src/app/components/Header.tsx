@@ -66,7 +66,7 @@ export default function Header() {
                   <div className="text-center">
                     <p className="text-xs text-gray-500">Daily Reward</p>
                     <p className="text-lg font-semibold text-green-600">
-                      ${nodes.daily_reward?.toFixed(2) || '0.00'}
+                      ${(nodes.daily_reward/nodes.total_nodes)?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                 </>

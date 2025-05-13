@@ -94,6 +94,7 @@ export interface usersPoints {
   user_email: string;
   point_id: number;
   total_points: number;
+  available_for_redemption: number;
   last_updated: string;
 }
 

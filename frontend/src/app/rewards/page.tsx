@@ -72,11 +72,11 @@ export default function Rewards() {
                   {rewardsData.map((reward, index) => (
                     <tr key={index}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(reward.date).toLocaleDateString('en-US', {
+                        {new Date(reward.date + 'Z').toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
-                           timeZone: 'America/New_York'
+                          timeZone: 'America/Chicago'
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

@@ -12,6 +12,7 @@ export default function RecentActivity() {
     const getActivities = async () => {
       try {
         const activitiesData = await fetchActivities();
+        console.log(activitiesData); // Verify your timestamp format here
         setActivities(activitiesData);
       } catch (error) {
         console.error('Error fetching activities:', error);
@@ -61,16 +62,18 @@ export default function RecentActivity() {
                       </p>
                     </div>
                     <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                    <time dateTime={activity.activity_timestamp}>
-                      {new Date(activity.activity_timestamp).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZone: 'America/New_York'
-                      })}
-                    </time>
+                      <time dateTime={activity.activity_timestamp}>
+                        {new Date(activity.activity_timestamp + 'Z').toLocaleString('en-US', {
+                          timeZone: 'America/Chicago',
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                          timeZoneName: 'short', // optional
+                        })}
+                      </time>
                     </div>
                   </div>
                 </div>

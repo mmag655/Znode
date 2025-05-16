@@ -7,16 +7,16 @@ import {
   updateNodes,
 } from '@/lib/api/nodes';
 import { NodesResponse } from '@/lib/api/types';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 
-const MAX_TOTAL_NODES = 20000;
+// const MAX_TOTAL_NODES = 20000;
 
 export default function AdminNodes() {
   const [nodes, setNodes] = useState<NodesResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [newNodeCount, setNewNodeCount] = useState<number | ''>('');
-  const [newNodeStatus, setNewNodeStatus] = useState<'active' | 'inactive' | 'reserved'>('inactive');
+  // const [newNodeCount, setNewNodeCount] = useState<number | ''>('');
+  // const [newNodeStatus, setNewNodeStatus] = useState<'active' | 'inactive' | 'reserved'>('inactive');
   const [dailyReward, setDailyReward] = useState<number>(0);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValues, setEditValues] = useState<Omit<NodesResponse, 'node_id'>>({ 
@@ -50,19 +50,19 @@ export default function AdminNodes() {
     fetchNodes();
   }, []);
 
-  const handleAddNode = async () => {
-    if (!newNodeCount || newNodeCount <= 0) return;
+  // const handleAddNode = async () => {
+  //   if (!newNodeCount || newNodeCount <= 0) return;
     
-    try {
-      setLoading(true);
-      toast.info("Nodes category already added can you modify");
-    } catch (err) {
-      setError('Failed to create node');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     toast.info("Nodes category already added can you modify");
+  //   } catch (err) {
+  //     setError('Failed to create node');
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const startEditing = (node: NodesResponse) => {
     // Only allow editing if node is reserved

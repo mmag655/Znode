@@ -48,7 +48,7 @@ def read_admin_transactions(user_id: int = Depends(get_current_user_id), db: Ses
     except Exception as e:
        return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@router.patch("/admin/approve/")
+@router.patch("/admin/approve")
 async def approve_transaction(request: Request, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     try:
         # Parse request body

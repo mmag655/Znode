@@ -26,8 +26,9 @@ def create_node(node: schemas_nodes.NodeCreate, db: Session = Depends(get_db), u
 def read_all_nodes(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     try:
         user = crud_users.get_user(db, user_id)
-        if user is None or user.role != "admin":
+        if user is None or user.role not in ["admin", "user"]:
             return error_response("Unauthorized access", status.HTTP_403_FORBIDDEN)
+
         
         nodes = crud_nodes.get_all_nodes(db)
         node_list = [node.to_dict() for node in nodes]

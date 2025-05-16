@@ -2,34 +2,43 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import UserDropdown from './UserDropdown';
-import { getAllNodes } from '@/lib/api/nodes';
-import { NodesResponse } from '@/lib/api';
+import { getAllNodes, getuserNodes } from '@/lib/api/nodes';
+import { NodesResponse, userNodes } from '@/lib/api';
 
 export default function Header() {
   const { user } = useAuth();
-  const [nodes, setNodes] = useState<NodesResponse | null>(null);
+  const [nodes, setNodes] = useState<NodesResponse[]>([]);
+  const [userNodesData, setUserNodesData] = useState<userNodes | null>(null); // Renamed to avoid conflict
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchNodes = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getAllNodes();
-        const activeNodes = data.find(node => node.status === 'active');
-        setNodes(activeNodes || null);
+        
+        // Fetch both data in parallel
+        const [allNodes, userNodes] = await Promise.all([
+          getAllNodes(),
+          user?.id ? getuserNodes(Number(user.id)) : Promise.resolve(null)
+        ]);
+        
+        setNodes(allNodes);
+        setUserNodesData(userNodes);
       } catch (err) {
-        setError('Failed to fetch nodes');
+        setError('Failed to fetch data');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (user?.role === 'admin') {
-      fetchNodes();
+    if (user?.role === 'admin' || user?.role === 'user') {
+      fetchData();
     }
-  }, [user?.role]);
+  }, [user?.role, user?.id]); // Added user.id dependency
+
+  const activeNodes = nodes.find(node => node.status === 'active');
 
   return (
     <header className="bg-white shadow-sm">
@@ -44,8 +53,8 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-6">
-          {/* Admin Stats - Only visible to admin */}
-          {user?.role === 'admin' && nodes && (
+          {/* Admin/User Stats */}
+          {(user?.role === 'admin' || user?.role === 'user') && (
             <div className="flex items-center space-x-4 bg-gray-50 rounded-lg px-4 py-2">
               {loading ? (
                 <div className="flex space-x-4">
@@ -56,19 +65,43 @@ export default function Header() {
                 <span className="text-red-500 text-sm">{error}</span>
               ) : (
                 <>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500">Active Nodes</p>
-                    <p className="text-lg font-semibold text-indigo-600">
-                      {nodes.status === 'active' ? nodes.total_nodes : 0}
-                    </p>
-                  </div>
-                  <div className="h-8 border-r border-gray-200"></div>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500">Daily Reward</p>
-                    <p className="text-lg font-semibold text-green-600">
-                      {(nodes.daily_reward/nodes.total_nodes)?.toFixed(2) || '0.00'}
-                    </p>
-                  </div>
+                  {/* Your Nodes - Will show if userNodesData exists */}
+                  {userNodesData && (
+                    <>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Your Nodes</p>
+                        <p className="text-lg font-semibold text-blue-600">
+                          {userNodesData.nodes_assigned ?? 0}
+                        </p>
+                      </div>
+                      <div className="h-8 border-r border-gray-200"></div>
+                    </>
+                  )}
+
+                  {/* Active Nodes - Will show if activeNodes exists */}
+                  {activeNodes && (
+                    <>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Active Nodes</p>
+                        <p className="text-lg font-semibold text-indigo-600">
+                          {activeNodes.total_nodes ?? 0}
+                        </p>
+                      </div>
+                      <div className="h-8 border-r border-gray-200"></div>
+                    </>
+                  )}
+
+                  {/* Daily Reward - Will show if activeNodes exists */}
+                  {activeNodes && (
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Daily Reward</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        {activeNodes.daily_reward && activeNodes.total_nodes
+                          ? (activeNodes.daily_reward / activeNodes.total_nodes).toFixed(2)
+                          : '0.00'}
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -83,6 +116,8 @@ export default function Header() {
     </header>
   );
 }
+
+// BellIcon remains the same
 
 function BellIcon() {
   return (

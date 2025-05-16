@@ -98,6 +98,8 @@ export interface usersPoints {
   last_updated: string;
 }
 
-
+export interface userNodes {
+  nodes_assigned: number
+}
 
   

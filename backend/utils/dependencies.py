@@ -10,7 +10,6 @@ from services.auth_service import decode_jwt_token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
 def get_current_user_id(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
-    print("token", token)
     if not token:
         raise HTTPException(status_code=401, detail="Authorization header is missing")
     try:
